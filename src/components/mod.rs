@@ -5,7 +5,7 @@ pub mod unity_canvas;
 pub mod component;
 
 use serde::{Deserialize, Serialize};
-pub use component::CuiComponent;
+pub use component::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Anchor {
@@ -100,13 +100,12 @@ pub struct CanvasObject {
 }
 
 // Элементы внутри Unity-канваса
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Element {
     pub id: String,
     pub name: String,
     pub element_type: ElementType,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub components: Vec<Box<dyn CuiComponent>>,
+    pub components: Vec<Component>,
     pub children: Vec<Element>,
 }
 
@@ -119,7 +118,7 @@ impl PartialEq for Element {
     }
 }
 
-#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum ElementType {
     UnityCanvas,
     Panel,

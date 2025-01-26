@@ -4,7 +4,7 @@ use components::{
     infinite_canvas::InfiniteCanvas,
     sidebar::Sidebar,
     properties::PropertiesPanel,
-    Element, CuiComponent,
+    Component, Element, ElementType,
 };
 use yew::prelude::*;
 use web_sys::console;
@@ -33,7 +33,7 @@ pub fn app() -> Html {
     
     let on_component_change = {
         let elements = elements.clone();
-        Callback::from(move |(id, component): (String, Box<dyn CuiComponent>)| {
+        Callback::from(move |(id, component): (String, Component)| {
             let mut new_elements = (*elements).clone();
             if let Some(element) = new_elements.iter_mut().find(|e| e.id == id) {
                 if let Some(existing_component) = element.components.iter_mut()

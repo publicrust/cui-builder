@@ -225,7 +225,10 @@ pub fn infinite_canvas(props: &InfiniteCanvasProps) -> Html {
                         
                         let style = if let Some(transform) = element.components.iter()
                             .find(|c| c.component_type() == "UnityCanvasTransform")
-                            .and_then(|c| c.as_any().downcast_ref::<UnityCanvasTransform>()) {
+                            .and_then(|c| match c {
+                                Component::UnityCanvasTransform(t) => Some(t),
+                                _ => None,
+                            }) {
                             format!(
                                 "left: {}px; top: {}px; width: {}px; height: {}px;",
                                 transform.x,
@@ -401,7 +404,10 @@ pub fn unity_element(props: &UnityElementProps) -> Html {
     
     let style = if let Some(transform) = props.element.components.iter()
         .find(|c| c.component_type() == "RectTransform")
-        .and_then(|c| c.as_any().downcast_ref::<RectTransformComponent>()) {
+        .and_then(|c| match c {
+            Component::RectTransform(t) => Some(t),
+            _ => None,
+        }) {
         format!(
             "position: absolute; left: {}%; top: {}%; right: {}%; bottom: {}%;",
             transform.anchor_min.0 * 100.0,

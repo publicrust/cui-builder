@@ -23,7 +23,7 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                 name: "Новый канвас".to_string(),
                 element_type: ElementType::UnityCanvas,
                 components: vec![
-                    Box::new(UnityCanvasTransform {
+                    Component::UnityCanvasTransform(UnityCanvasTransform {
                         x: 100.0,
                         y: 100.0,
                         width: 400.0,
@@ -44,13 +44,13 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                 name: "Новая панель".to_string(),
                 element_type: ElementType::Panel,
                 components: vec![
-                    Box::new(RectTransformComponent {
+                    Component::RectTransform(RectTransformComponent {
                         anchor_min: (0.0, 0.0),
                         anchor_max: (1.0, 1.0),
                         offset_min: (10.0, 10.0),
                         offset_max: (-10.0, -10.0),
                     }),
-                    Box::new(ImageComponent {
+                    Component::Image(ImageComponent {
                         sprite: None,
                         color: Some("1.0 1.0 1.0 0.5".to_string()),
                         material: None,
