@@ -1,4 +1,4 @@
-use web_sys::{MouseEvent, WheelEvent, DragEvent, TouchEvent, console};
+use web_sys::{MouseEvent, WheelEvent, TouchEvent, console};
 use yew::prelude::*;
 use crate::models::Element;
 use crate::core::component::Component;
@@ -86,25 +86,6 @@ pub fn infinite_canvas(props: &InfiniteCanvasProps) -> Html {
         })
     };
 
-    let ondragover = Callback::from(|e: DragEvent| {
-        e.prevent_default();
-        console::log_1(&"Dragging over canvas".into());
-    });
-
-    let ondrop = {
-        let on_reparent = props.on_reparent.clone();
-        Callback::from(move |e: DragEvent| {
-            e.prevent_default();
-            console::log_1(&"Dropping onto canvas".into());
-            if let Some(data_transfer) = e.data_transfer() {
-                if let Ok(child_id) = data_transfer.get_data("text/plain") {
-                    console::log_1(&format!("Got drag data on canvas: {}", child_id).into());
-                    on_reparent.emit((child_id, None));
-                }
-            }
-        })
-    };
-
     let workspace_style = format!(
         "transform: translate({}px, {}px) scale({});",
         0.0, 0.0, 1.0  // Убираем трансформацию с workspace
@@ -155,8 +136,6 @@ pub fn infinite_canvas(props: &InfiniteCanvasProps) -> Html {
             onmouseup={onmouseup}
             onmousemove={onmousemove}
             onwheel={onwheel}
-            ondragover={ondragover}
-            ondrop={ondrop}
             oncontextmenu={Callback::from(|e: MouseEvent| e.prevent_default())}
         >
             <div class="grid-container">

@@ -34,13 +34,13 @@ impl Component {
         }
     }
 
-    pub fn render_properties(&self) -> Html {
+    pub fn render_properties_with_callback(&self, on_update: Callback<Component>) -> Html {
         match self {
-            Component::RectTransform(c) => c.render_properties(),
-            Component::UnityCanvasTransform(c) => c.render_properties(),
-            Component::Image(c) => c.render_properties(),
-            Component::Text(c) => c.render_properties(),
-            Component::Button(c) => c.render_properties(),
+            Component::RectTransform(c) => c.render_properties_with_callback(on_update),
+            Component::UnityCanvasTransform(c) => c.render_properties_with_callback(on_update),
+            Component::Image(c) => c.render_properties_with_callback(on_update),
+            Component::Text(c) => c.render_properties_with_callback(on_update),
+            Component::Button(c) => c.render_properties_with_callback(on_update),
         }
     }
 } 

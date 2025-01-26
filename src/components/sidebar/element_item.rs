@@ -29,7 +29,7 @@ pub fn element_item(props: &ElementItemProps) -> Html {
     let ondragstart = {
         let id = props.element.id.clone();
         Callback::from(move |e: DragEvent| {
-            console::log_1(&format!("Started dragging in hierarchy: {}", id).into());
+
             if let Some(data_transfer) = e.data_transfer() {
                 let _ = data_transfer.set_data("text/plain", &id);
             }

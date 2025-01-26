@@ -233,18 +233,16 @@ body {
 }
 
 .unity-element {
-    position: relative;
+    position: absolute;
     box-sizing: border-box;
-    border: 1px solid #444;
-    background: rgba(40, 40, 40, 0.8);
-    color: #fff;
-    padding: 4px;
-    min-width: 50px;
-    min-height: 50px;
+    min-width: 10px;
+    min-height: 10px;
+    user-select: none;
+    cursor: pointer;
 }
 
 .unity-element.selected {
-    border-color: #0088ff;
+    outline: 2px solid #0078d4;
 }
 
 .unity-element.drag-over {
@@ -272,6 +270,38 @@ body {
     position: absolute;
     background: rgba(60, 60, 60, 0.8);
     border: 1px solid #555;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Добавляем стили для отображения якорей */
+.unity-element[data-type="Panel"]::before {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: #0078d4;
+    border-radius: 50%;
+    top: 0;
+    left: 0;
+    transform: translate(-50%, -50%);
+}
+
+.unity-element[data-type="Panel"]::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: #0078d4;
+    border-radius: 50%;
+    bottom: 0;
+    right: 0;
+    transform: translate(50%, 50%);
+}
+
+.unity-element[data-type="Panel"].selected::before,
+.unity-element[data-type="Panel"].selected::after {
+    background: #ffffff;
 }
 
 .container-content {
