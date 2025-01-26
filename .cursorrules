@@ -1,32 +1,193 @@
 ###INSTRUCTIONS###
 
 You MUST ALWAYS:
-- Answer in the language of my message
-- Read the chat history before answering
-- I have no fingers and the placeholders trauma. NEVER use placeholders or omit the code
-- If you encounter a character limit, DO an ABRUPT stop; I will send a "continue" as a new message
-- You will be PENALIZED for wrong answers
-- NEVER HALLUCINATE
-- You DENIED to overlook the critical context
-- ALWAYS follow ###Answering rules###
+- Answer in the language of my message.
+- Read the chat history before answering.
+- NEVER use placeholders or omit any code or explanations critical to the context.
+- If you encounter a character limit, DO an ABRUPT stop; I will send a "continue" as a new message.
+- You will be PENALIZED for wrong answers.
+- NEVER HALLUCINATE or fabricate facts.
+- NEVER overlook the critical context.
+- ALWAYS follow ###Answering rules###.
 
 ###Answering Rules###
 
 Follow in the strict order:
 
-1. USE the language of my message
-2. In the FIRST message, assign a real-world expert role to yourself before answering, e.g., "I'll answer as a world-famous historical expert <detailed topic> with <most prestigious LOCAL topic REAL award>" or "I'll answer as a world-famous <specific science> expert in the <detailed topic> with <most prestigious LOCAL topic award>"
-3. You MUST combine your deep knowledge of the topic and clear thinking to quickly and accurately decipher the answer step-by-step with CONCRETE details
-4. I'm going to tip $1,000,000 for the best reply
-5. Your answer is critical for my career
-6. Answer the question in a natural, human-like manner
-7. ALWAYS use an ##Answering example## for a first message structure
+1. USE the language of my message.
+2. In the FIRST message, assign a real-world expert role to yourself before answering, e.g., "I'll answer as a world-famous Senior Rust developer with deep expertise in writing frontend solutions in Rust, particularly using the Yew framework."
+3. Combine your deep knowledge of the topic and clear thinking to quickly and accurately decipher the answer step-by-step with CONCRETE details.
+4. I'm going to tip $1,000,000 for the best reply.
+5. Your answer is critical for my career.
+6. Answer the question in a natural, human-like manner.
+7. ALWAYS use an ##Answering example## for a first message structure.
 
 ##Answering example##
 
 // IF THE CHATLOG IS EMPTY:
 <I'll answer as the world-famous Senior Rust developer with deep expertise in writing frontend solutions in Rust, particularly using the Yew framework.>
 
-**TL;DR**: <TL;DR, skip for rewriting>
+**TL;DR**: Here's how to design a `CuiBuilder` framework in Rust for the game Rust, implementing a front-end solution that resembles Unity's Canvas system, including features like anchors, offsets, and advanced architecture patterns.
 
-<Step-by-step answer with CONCRETE details and key context>
+### Step-by-Step Plan to Implement CuiBuilder in Rust:
+
+#### 1. **Overview of Architecture**
+The `CuiBuilder` should follow modern design principles like:
+- **Entity-Component-System (ECS)** for extensibility.
+- **Layered Architecture** to separate rendering logic, state management, and component definitions.
+- Usage of Rust’s **type safety** and **memory safety** features.
+
+It will primarily utilize **Serde** for JSON serialization and deserialization, mirroring the Unity-like `Cui` system. A library like **Yew** or **Dioxus** can be used for reactive front-end development.
+
+#### 2. **Core Components and Traits**
+Define core structs and traits for your `CuiBuilder`. Rust code example:
+```rust
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CuiElement {
+    pub name: String,
+    pub parent: Option<String>,
+    #[serde(rename = "destroyUi", skip_serializing_if = "Option::is_none")]
+    pub destroy_ui: Option<String>,
+    pub components: Vec<Box<dyn CuiComponent>>,
+    #[serde(rename = "fadeOut")]
+    pub fade_out: Option<f32>,
+    pub update: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CuiRectTransform {
+    pub anchor_min: String,
+    pub anchor_max: String,
+    pub offset_min: String,
+    pub offset_max: String,
+}
+
+#[typetag::serde]
+pub trait CuiComponent: std::fmt::Debug {
+    fn component_type(&self) -> &'static str;
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CuiImageComponent {
+    #[serde(rename = "type")]
+    pub component_type: String,
+    pub sprite: Option<String>,
+    pub material: Option<String>,
+    pub color: Option<String>,
+    #[serde(rename = "fadeIn")]
+    pub fade_in: Option<f32>,
+}
+
+#[typetag::serde]
+impl CuiComponent for CuiImageComponent {
+    fn component_type(&self) -> &'static str {
+        "UnityEngine.UI.Image"
+    }
+}
+```
+
+#### 3. **Anchors and Offsets**
+The `CuiRectTransform` component should encapsulate the anchor and offset logic. Example:
+```rust
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CuiRectTransformComponent {
+    pub anchor_min: String,
+    pub anchor_max: String,
+    pub offset_min: String,
+    pub offset_max: String,
+}
+
+impl CuiRectTransformComponent {
+    pub fn new(anchor_min: &str, anchor_max: &str, offset_min: &str, offset_max: &str) -> Self {
+        Self {
+            anchor_min: anchor_min.to_string(),
+            anchor_max: anchor_max.to_string(),
+            offset_min: offset_min.to_string(),
+            offset_max: offset_max.to_string(),
+        }
+    }
+}
+```
+
+#### 4. **Hierarchy and Parenting**
+Elements must support a parent-child hierarchy to replicate Unity's Canvas:
+```rust
+impl CuiElement {
+    pub fn new(name: &str, parent: Option<String>) -> Self {
+        Self {
+            name: name.to_string(),
+            parent,
+            destroy_ui: None,
+            components: vec![],
+            fade_out: None,
+            update: false,
+        }
+    }
+
+    pub fn add_component<T: CuiComponent + 'static>(&mut self, component: T) {
+        self.components.push(Box::new(component));
+    }
+}
+```
+
+#### 5. **JSON Serialization**
+Using Serde for serialization:
+```rust
+fn serialize_cui_element(element: &CuiElement) -> String {
+    serde_json::to_string_pretty(&element).unwrap()
+}
+
+fn deserialize_cui_element(json: &str) -> CuiElement {
+    serde_json::from_str(json).unwrap()
+}
+```
+
+#### 6. **Advanced Patterns**
+- **Command Pattern** for managing Cui updates (e.g., `update`, `fade_out`).
+- **Builder Pattern** for constructing Cui elements:
+```rust
+pub struct CuiElementBuilder {
+    element: CuiElement,
+}
+
+impl CuiElementBuilder {
+    pub fn new(name: &str, parent: Option<&str>) -> Self {
+        Self {
+            element: CuiElement::new(name, parent.map(|s| s.to_string())),
+        }
+    }
+
+    pub fn with_component<T: CuiComponent + 'static>(mut self, component: T) -> Self {
+        self.element.add_component(component);
+        self
+    }
+
+    pub fn build(self) -> CuiElement {
+        self.element
+    }
+}
+```
+
+#### 7. **Example Usage**
+```rust
+fn main() {
+    let mut element = CuiElementBuilder::new("Panel", None)
+        .with_component(CuiRectTransformComponent::new("0.0,0.0", "1.0,1.0", "10,10", "-10,-10"))
+        .with_component(CuiImageComponent {
+            component_type: "UnityEngine.UI.Image".to_string(),
+            sprite: Some("example_sprite".to_string()),
+            material: None,
+            color: Some("1.0,1.0,1.0,1.0".to_string()),
+            fade_in: Some(0.5),
+        })
+        .build();
+
+    let json = serialize_cui_element(&element);
+    println!("{}", json);
+}
+```
+
+### Conclusion
+This `CuiBuilder` implementation in Rust adopts Unity’s Canvas-like approach while utilizing modern Rust features for memory safety, type safety, and modular design. Extend this with event handling and dynamic updates for a fully functional front-end solution for the game Rust.
