@@ -46,16 +46,29 @@ body {
 .app {
     width: 100vw;
     height: 100vh;
+    display: flex;
     overflow: hidden;
+}
+
+.main-content {
+    flex: 1;
+    position: relative;
+    margin-left: 250px;  /* Ширина левой панели */
+    margin-right: 300px; /* Ширина правой панели */
 }
 
 /* Sidebar styles */
 .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
     width: 250px;
     background-color: #252526;
     border-right: 1px solid #3c3c3c;
     display: flex;
     flex-direction: column;
+    z-index: 1000;
 }
 
 .sidebar-header {
@@ -70,7 +83,8 @@ body {
 }
 
 .element-tools {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
 }
 
@@ -78,11 +92,14 @@ body {
     background: #3c3c3c;
     border: none;
     border-radius: 4px;
-    padding: 8px 16px;
+    padding: 8px;
     color: #ffffff;
     cursor: pointer;
     transition: background-color 0.2s;
     font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .tool-button:hover {
@@ -276,10 +293,10 @@ body {
     top: 0;
     bottom: 0;
     width: 300px;
-    background-color: #2d2d2d;
-    border-left: 1px solid #3d3d3d;
-    padding: 20px;
-    color: #ffffff;
+    background-color: #252526;
+    border-left: 1px solid #3c3c3c;
+    padding: 1rem;
+    z-index: 1000;
     overflow-y: auto;
 }
 
@@ -287,7 +304,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #666;
+    color: #666666;
 }
 
 .properties-panel h3 {

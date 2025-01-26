@@ -1,5 +1,5 @@
 use yew::prelude::*;
-use super::{Element, ElementType, RectTransform, Vector2};
+use super::{Element, ElementType, Transform, RectTransform, Vector2};
 use uuid::Uuid;
 use web_sys::DragEvent;
 
@@ -13,14 +13,40 @@ pub struct SidebarProps {
 
 #[function_component(Sidebar)]
 pub fn sidebar(props: &SidebarProps) -> Html {
-    let add_container = {
+    let add_unity_canvas = {
         let on_add_element = props.on_add_element.clone();
         Callback::from(move |_| {
             let new_element = Element {
                 id: Uuid::new_v4().to_string(),
-                name: "Новый контейнер".to_string(),
-                element_type: ElementType::Container,
-                rect_transform: RectTransform::default(),
+                name: "Новый канвас".to_string(),
+                element_type: ElementType::UnityCanvas,
+                transform: Some(Transform {
+                    x: 0.0,
+                    y: 0.0,
+                    width: 400.0,
+                    height: 300.0,
+                }),
+                rect_transform: None,
+                children: vec![],
+            };
+            on_add_element.emit(new_element);
+        })
+    };
+
+    let add_panel = {
+        let on_add_element = props.on_add_element.clone();
+        Callback::from(move |_| {
+            let new_element = Element {
+                id: Uuid::new_v4().to_string(),
+                name: "Новая панель".to_string(),
+                element_type: ElementType::Panel,
+                transform: None,
+                rect_transform: Some(RectTransform {
+                    anchor_min: Vector2 { x: 0.0, y: 0.0 },
+                    anchor_max: Vector2 { x: 1.0, y: 1.0 },
+                    offset_min: Vector2 { x: 10.0, y: 10.0 },
+                    offset_max: Vector2 { x: -10.0, y: -10.0 },
+                }),
                 children: vec![],
             };
             on_add_element.emit(new_element);
@@ -34,31 +60,13 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                 id: Uuid::new_v4().to_string(),
                 name: "Новый текст".to_string(),
                 element_type: ElementType::Text,
-                rect_transform: RectTransform {
-                    anchor_min: Vector2 { x: 0.4, y: 0.4 },
-                    anchor_max: Vector2 { x: 0.6, y: 0.6 },
-                    offset_min: Vector2 { x: 0.0, y: 0.0 },
-                    offset_max: Vector2 { x: 0.0, y: 0.0 },
-                },
-                children: vec![],
-            };
-            on_add_element.emit(new_element);
-        })
-    };
-
-    let add_image = {
-        let on_add_element = props.on_add_element.clone();
-        Callback::from(move |_| {
-            let new_element = Element {
-                id: Uuid::new_v4().to_string(),
-                name: "Новое изображение".to_string(),
-                element_type: ElementType::Image,
-                rect_transform: RectTransform {
-                    anchor_min: Vector2 { x: 0.35, y: 0.35 },
-                    anchor_max: Vector2 { x: 0.65, y: 0.65 },
-                    offset_min: Vector2 { x: 0.0, y: 0.0 },
-                    offset_max: Vector2 { x: 0.0, y: 0.0 },
-                },
+                transform: None,
+                rect_transform: Some(RectTransform {
+                    anchor_min: Vector2 { x: 0.5, y: 0.5 },
+                    anchor_max: Vector2 { x: 0.5, y: 0.5 },
+                    offset_min: Vector2 { x: -50.0, y: -25.0 },
+                    offset_max: Vector2 { x: 50.0, y: 25.0 },
+                }),
                 children: vec![],
             };
             on_add_element.emit(new_element);
@@ -72,105 +80,91 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                 id: Uuid::new_v4().to_string(),
                 name: "Новая кнопка".to_string(),
                 element_type: ElementType::Button,
-                rect_transform: RectTransform {
-                    anchor_min: Vector2 { x: 0.4, y: 0.4 },
-                    anchor_max: Vector2 { x: 0.6, y: 0.6 },
-                    offset_min: Vector2 { x: 0.0, y: 0.0 },
-                    offset_max: Vector2 { x: 0.0, y: 0.0 },
-                },
+                transform: None,
+                rect_transform: Some(RectTransform {
+                    anchor_min: Vector2 { x: 0.5, y: 0.5 },
+                    anchor_max: Vector2 { x: 0.5, y: 0.5 },
+                    offset_min: Vector2 { x: -60.0, y: -20.0 },
+                    offset_max: Vector2 { x: 60.0, y: 20.0 },
+                }),
                 children: vec![],
             };
             on_add_element.emit(new_element);
         })
     };
 
+    fn render_elements_recursive(
+        elements: &[Element],
+        on_select: &Callback<String>,
+        on_reparent: &Callback<(String, Option<String>)>,
+        _parent_id: Option<String>,
+    ) -> Html {
+        elements.iter().map(|element| {
+            let element_id = element.id.clone();
+            let on_select = on_select.clone();
+            let on_dragstart = {
+                let element_id = element_id.clone();
+                Callback::from(move |e: DragEvent| {
+                    e.data_transfer().unwrap().set_data("text/plain", &element_id).unwrap();
+                })
+            };
+            
+            let on_dragover = Callback::from(|e: DragEvent| {
+                e.prevent_default();
+            });
+            
+            let on_drop = {
+                let element_id = element_id.clone();
+                let on_reparent = on_reparent.clone();
+                Callback::from(move |e: DragEvent| {
+                    e.prevent_default();
+                    if let Ok(dragged_id) = e.data_transfer().unwrap().get_data("text/plain") {
+                        on_reparent.emit((dragged_id, Some(element_id.clone())));
+                    }
+                })
+            };
+
+            let element_icon = match element.element_type {
+                ElementType::UnityCanvas => "🎨",
+                ElementType::Panel => "⬜",
+                ElementType::Text => "📝",
+                ElementType::Button => "🔘",
+            };
+
+            html! {
+                <div class="element-item">
+                    <div class="element-header"
+                        draggable="true"
+                        ondragstart={on_dragstart}
+                        ondragover={on_dragover.clone()}
+                        ondrop={on_drop}
+                        onclick={let on_select = on_select.clone(); let id = element_id.clone(); move |_| on_select.emit(id.clone())}
+                    >
+                        <span class="element-icon">{element_icon}</span>
+                        <span class="element-name">{&element.name}</span>
+                    </div>
+                    <div class="element-list">
+                        {render_elements_recursive(&element.children, &on_select, &on_reparent, None)}
+                    </div>
+                </div>
+            }
+        }).collect::<Html>()
+    }
+
     html! {
         <div class="sidebar">
             <div class="sidebar-header">
                 <h2>{"Элементы"}</h2>
                 <div class="element-tools">
-                    <button class="tool-button" onclick={add_container}>{"Контейнер"}</button>
-                    <button class="tool-button" onclick={add_text}>{"Текст"}</button>
-                    <button class="tool-button" onclick={add_image}>{"Изображение"}</button>
-                    <button class="tool-button" onclick={add_button}>{"Кнопка"}</button>
+                    <button class="tool-button" onclick={add_unity_canvas}>{"Unity Canvas"}</button>
+                    <button class="tool-button" onclick={add_panel}>{"Panel"}</button>
+                    <button class="tool-button" onclick={add_text}>{"Text"}</button>
+                    <button class="tool-button" onclick={add_button}>{"Button"}</button>
                 </div>
             </div>
             <div class="elements-tree">
-                { render_elements(&props.elements, &props.on_select, &props.on_reparent, None) }
+                {render_elements_recursive(&props.elements, &props.on_select, &props.on_reparent, None)}
             </div>
         </div>
-    }
-}
-
-fn render_elements(
-    elements: &[Element],
-    on_select: &Callback<String>,
-    on_reparent: &Callback<(String, Option<String>)>,
-    _parent_id: Option<String>,
-) -> Html {
-    html! {
-        <ul class="element-list">
-            {elements.iter().map(|element| {
-                let id = element.id.clone();
-                let on_click = {
-                    let on_select = on_select.clone();
-                    let id = id.clone();
-                    Callback::from(move |_| {
-                        on_select.emit(id.clone());
-                    })
-                };
-
-                let on_dragstart = {
-                    let id = id.clone();
-                    Callback::from(move |e: DragEvent| {
-                        e.data_transfer().unwrap().set_data("text/plain", &id).unwrap();
-                        e.data_transfer().unwrap().set_effect_allowed("move");
-                    })
-                };
-
-                let on_dragover = Callback::from(|e: DragEvent| {
-                    e.prevent_default();
-                    e.data_transfer().unwrap().set_drop_effect("move");
-                });
-
-                let on_drop = {
-                    let on_reparent = on_reparent.clone();
-                    let parent_id = id.clone();
-                    Callback::from(move |e: DragEvent| {
-                        e.prevent_default();
-                        if let Ok(dragged_id) = e.data_transfer().unwrap().get_data("text/plain") {
-                            if dragged_id != parent_id {
-                                on_reparent.emit((dragged_id, Some(parent_id.clone())));
-                            }
-                        }
-                    })
-                };
-
-                html! {
-                    <li class="element-item" key={id.clone()}>
-                        <div class="element-header"
-                            draggable="true"
-                            ondragstart={on_dragstart}
-                            ondragover={on_dragover}
-                            ondrop={on_drop}
-                            onclick={on_click}
-                        >
-                            <span class="element-icon">
-                                {match element.element_type {
-                                    ElementType::Container => "📦",
-                                    ElementType::Text => "📝",
-                                    ElementType::Image => "🖼️",
-                                    ElementType::Button => "🔘",
-                                }}
-                            </span>
-                            <span class="element-name">{&element.name}</span>
-                        </div>
-                        if !element.children.is_empty() {
-                            { render_elements(&element.children, on_select, on_reparent, Some(id.clone())) }
-                        }
-                    </li>
-                }
-            }).collect::<Html>()}
-        </ul>
     }
 } 

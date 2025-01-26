@@ -1,167 +1,77 @@
 use yew::prelude::*;
-use super::{Element, ElementType, RectTransform};
-use web_sys::MouseEvent;
+use super::{Element, Transform, ElementType};
 
 #[derive(Properties, PartialEq)]
 pub struct UnityCanvasProps {
-    pub elements: Vec<Element>,
-    #[prop_or_default]
-    pub selected_id: Option<String>,
-    #[prop_or_default]
-    pub on_element_move: Option<Callback<(String, RectTransform)>>,
-    #[prop_or_default]
+    pub element: Element,
+    pub on_element_move: Option<Callback<(String, Transform)>>,
     pub on_select: Option<Callback<String>>,
-}
-
-#[derive(Default)]
-struct DragState {
-    is_dragging: bool,
-    start_x: f64,
-    start_y: f64,
-    element_id: String,
-    initial_transform: RectTransform,
 }
 
 #[function_component(UnityCanvas)]
 pub fn unity_canvas(props: &UnityCanvasProps) -> Html {
-    let drag_state = use_state(DragState::default);
+    let element = &props.element;
+    let transform = element.transform.as_ref().expect("UnityCanvas должен иметь transform");
+    
+    let style = format!(
+        "position: absolute; left: {}px; top: {}px; width: {}px; height: {}px;",
+        transform.x,
+        transform.y,
+        transform.width,
+        transform.height,
+    );
+
+    let on_mousedown = {
+        let on_select = props.on_select.clone();
+        let id = element.id.clone();
+        Callback::from(move |_| {
+            if let Some(on_select) = &on_select {
+                on_select.emit(id.clone());
+            }
+        })
+    };
 
     html! {
-        <div class="unity-canvas-content">
-            { render_elements(&props.elements, &props.selected_id, &props.on_element_move, &props.on_select, &drag_state) }
+        <div class="unity-canvas" {style} onmousedown={on_mousedown}>
+            <div class="unity-canvas-content">
+                {for element.children.iter().map(|child| html! {
+                    <UnityElement element={child.clone()} />
+                })}
+            </div>
         </div>
     }
 }
 
-fn calculate_element_style(rect_transform: &RectTransform, parent_width: f64, parent_height: f64) -> String {
-    let left = parent_width * rect_transform.anchor_min.x + rect_transform.offset_min.x;
-    let top = parent_height * rect_transform.anchor_min.y + rect_transform.offset_min.y;
-    let right = parent_width * rect_transform.anchor_max.x + rect_transform.offset_max.x;
-    let bottom = parent_height * rect_transform.anchor_max.y + rect_transform.offset_max.y;
-
-    let width = right - left;
-    let height = bottom - top;
-
-    format!(
-        "position: absolute; left: {}px; top: {}px; width: {}px; height: {}px;",
-        left, top, width, height
-    )
+#[derive(Properties, PartialEq)]
+pub struct UnityElementProps {
+    pub element: Element,
 }
 
-fn render_elements(
-    elements: &[Element],
-    selected_id: &Option<String>,
-    on_element_move: &Option<Callback<(String, RectTransform)>>,
-    on_select: &Option<Callback<String>>,
-    drag_state: &UseStateHandle<DragState>,
-) -> Html {
-    let parent_width = 1000.0; // Фиксированный размер канваса для примера
-    let parent_height = 800.0;
+#[function_component(UnityElement)]
+pub fn unity_element(props: &UnityElementProps) -> Html {
+    let element = &props.element;
+    let rect_transform = element.rect_transform.as_ref().expect("Дочерние элементы должны иметь rect_transform");
+
+    let style = format!(
+        "position: absolute; left: {}%; top: {}%; right: {}%; bottom: {}%;",
+        rect_transform.anchor_min.x * 100.0,
+        rect_transform.anchor_min.y * 100.0,
+        (1.0 - rect_transform.anchor_max.x) * 100.0,
+        (1.0 - rect_transform.anchor_max.y) * 100.0,
+    );
+
+    let element_class = match element.element_type {
+        ElementType::UnityCanvas => "unity-canvas-element",
+        ElementType::Panel => "panel-element",
+        ElementType::Text => "text-element",
+        ElementType::Button => "button-element",
+    };
 
     html! {
-        <>
-            {elements.iter().map(|element| {
-                let style = calculate_element_style(&element.rect_transform, parent_width, parent_height);
-                let element_class = classes!(
-                    "unity-element",
-                    selected_id.as_ref().map(|id| id == &element.id).unwrap_or(false).then(|| "selected"),
-                    match element.element_type {
-                        ElementType::Container => "container-element",
-                        ElementType::Text => "text-element",
-                        ElementType::Image => "image-element",
-                        ElementType::Button => "button-element",
-                    }
-                );
-
-                let id = element.id.clone();
-                let on_mousedown = {
-                    let drag_state = drag_state.clone();
-                    let element = element.clone();
-                    let on_select = on_select.clone();
-                    Callback::from(move |e: MouseEvent| {
-                        if e.button() == 0 { // Только левая кнопка мыши
-                            e.prevent_default();
-                            e.stop_propagation();
-                            
-                            if let Some(on_select) = on_select.as_ref() {
-                                on_select.emit(id.clone());
-                            }
-                            
-                            drag_state.set(DragState {
-                                is_dragging: true,
-                                start_x: e.client_x() as f64,
-                                start_y: e.client_y() as f64,
-                                element_id: element.id.clone(),
-                                initial_transform: element.rect_transform.clone(),
-                            });
-                        }
-                    })
-                };
-
-                let onmousemove = {
-                    let drag_state = drag_state.clone();
-                    let on_element_move = on_element_move.clone();
-                    Callback::from(move |e: MouseEvent| {
-                        if drag_state.is_dragging {
-                            e.prevent_default();
-                            e.stop_propagation();
-                            
-                            let current_x = e.client_x() as f64;
-                            let current_y = e.client_y() as f64;
-                            let dx = current_x - drag_state.start_x;
-                            let dy = current_y - drag_state.start_y;
-                            
-                            let mut new_transform = drag_state.initial_transform.clone();
-                            new_transform.offset_min.x = drag_state.initial_transform.offset_min.x + dx;
-                            new_transform.offset_min.y = drag_state.initial_transform.offset_min.y + dy;
-                            new_transform.offset_max.x = drag_state.initial_transform.offset_max.x + dx;
-                            new_transform.offset_max.y = drag_state.initial_transform.offset_max.y + dy;
-                            
-                            if let Some(on_element_move) = on_element_move.as_ref() {
-                                on_element_move.emit((drag_state.element_id.clone(), new_transform));
-                            }
-                        }
-                    })
-                };
-
-                let onmouseup = {
-                    let drag_state = drag_state.clone();
-                    Callback::from(move |e: MouseEvent| {
-                        e.prevent_default();
-                        e.stop_propagation();
-                        drag_state.set(DragState::default());
-                    })
-                };
-
-                html! {
-                    <div
-                        key={element.id.clone()}
-                        class={element_class}
-                        style={style}
-                        onmousedown={on_mousedown}
-                        onmousemove={onmousemove}
-                        onmouseup={&onmouseup}
-                        onmouseleave={onmouseup}
-                    >
-                        {match element.element_type {
-                            ElementType::Container => html! {
-                                <div class="container-content">
-                                    { render_elements(&element.children, selected_id, on_element_move, on_select, drag_state) }
-                                </div>
-                            },
-                            ElementType::Text => html! {
-                                <div class="text-content">{"Текстовый элемент"}</div>
-                            },
-                            ElementType::Image => html! {
-                                <div class="image-content">{"Изображение"}</div>
-                            },
-                            ElementType::Button => html! {
-                                <div class="button-content">{"Кнопка"}</div>
-                            },
-                        }}
-                    </div>
-                }
-            }).collect::<Html>()}
-        </>
+        <div class={classes!("unity-element", element_class)} {style}>
+            {for element.children.iter().map(|child| html! {
+                <UnityElement element={child.clone()} />
+            })}
+        </div>
     }
 } 

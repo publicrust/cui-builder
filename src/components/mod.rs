@@ -47,10 +47,10 @@ pub struct Transform {
 // Unity-подобный RectTransform для элементов внутри канваса
 #[derive(Clone, PartialEq)]
 pub struct RectTransform {
-    pub anchor_min: Vector2,  // От 0 до 1, определяет привязку к родителю (левый нижний угол)
-    pub anchor_max: Vector2,  // От 0 до 1, определяет привязку к родителю (правый верхний угол)
-    pub offset_min: Vector2,  // Отступ от точки привязки в пикселях (левый нижний угол)
-    pub offset_max: Vector2,  // Отступ от точки привязки в пикселях (правый верхний угол)
+    pub anchor_min: Vector2,
+    pub anchor_max: Vector2,
+    pub offset_min: Vector2,
+    pub offset_max: Vector2,
 }
 
 #[derive(Clone, PartialEq, Default)]
@@ -80,10 +80,10 @@ impl Default for WorkspaceState {
 impl Default for RectTransform {
     fn default() -> Self {
         Self {
-            anchor_min: Vector2 { x: 0.5, y: 0.5 },
-            anchor_max: Vector2 { x: 0.5, y: 0.5 },
-            offset_min: Vector2 { x: -50.0, y: -50.0 },
-            offset_max: Vector2 { x: 50.0, y: 50.0 },
+            anchor_min: Vector2 { x: 0.0, y: 0.0 },
+            anchor_max: Vector2 { x: 1.0, y: 1.0 },
+            offset_min: Vector2 { x: 0.0, y: 0.0 },
+            offset_max: Vector2 { x: 0.0, y: 0.0 },
         }
     }
 }
@@ -103,20 +103,21 @@ pub struct Element {
     pub id: String,
     pub name: String,
     pub element_type: ElementType,
-    pub rect_transform: RectTransform,
+    pub transform: Option<Transform>,      // Для UnityCanvas
+    pub rect_transform: Option<RectTransform>, // Для дочерних элементов
     pub children: Vec<Element>,
 }
 
 #[derive(Clone, PartialEq)]
 pub enum ElementType {
-    Container,  // Контейнер внутри канваса
-    Text,       // Текстовый элемент
-    Image,      // Изображение
-    Button,     // Кнопка
+    UnityCanvas,
+    Panel,
+    Text,
+    Button,
 }
 
 impl Default for ElementType {
     fn default() -> Self {
-        Self::Container
+        Self::UnityCanvas
     }
 } 
