@@ -3,6 +3,7 @@
 use yew::prelude::*;
 use cui_builder::{
     Element,
+    core::component::Component,
     components::{
         canvas::infinite::InfiniteCanvas,
         sidebar::{element_item::ElementItem, toolbar::Toolbar},
@@ -29,7 +30,7 @@ pub fn app() -> Html {
     let on_select = {
         let selected_id = selected_id.clone();
         Callback::from(move |id: String| {
-            console::log_1(&format!("Selected element: {}", id).into());
+
             selected_id.set(Some(id));
         })
     };
@@ -39,44 +40,80 @@ pub fn app() -> Html {
         let is_reparenting = is_reparenting.clone();
         Callback::from(move |(child_id, new_parent_id): (String, Option<String>)| {
             if *is_reparenting {
-                console::log_1(&"Already reparenting, skipping".into());
+
                 return;
             }
             is_reparenting.set(true);
             
-            console::log_1(&format!("Reparenting {} to {:?}", child_id, new_parent_id).into());
+
             
             let mut new_elements = (*elements).clone();
             
             // Находим и удаляем элемент из любого места в иерархии
             if let Some(child_element) = remove_element_by_id(&mut new_elements, &child_id) {
-                console::log_1(&format!("Found and removed child element: {} ({})", child_element.name, child_element.id).into());
+
                 
                 match new_parent_id {
                     // Добавляем элемент к новому родителю
                     Some(parent_id) => {
-                        console::log_1(&format!("Looking for parent: {}", parent_id).into());
+
                         if let Some(parent) = find_element_by_id_mut(&mut new_elements, &parent_id) {
-                            console::log_1(&format!("Found parent: {} ({})", parent.name, parent.id).into());
+
                             parent.children.push(child_element);
-                            console::log_1(&"Added child to new parent".into());
+
                         } else {
-                            console::log_1(&"Parent not found, adding back to root".into());
+
                             new_elements.push(child_element);
                         }
                     }
                     // Добавляем элемент в корень
                     None => {
-                        console::log_1(&"Adding child to root".into());
+
                         new_elements.push(child_element);
                     }
                 }
                 elements.set(new_elements);
             } else {
-                console::log_1(&"Child element not found".into());
+
             }
             
             is_reparenting.set(false);
+        })
+    };
+    
+    let on_update_component = {
+        let elements = elements.clone();
+        Callback::from(move |(element_id, new_component): (String, Component)| {
+            console::log_1(&format!("Начало обновления компонента для элемента: {} (тип: {})",
+                element_id, new_component.component_type()).into());
+            
+            let mut new_elements = (*elements).clone();
+            
+            if let Some(element) = find_element_by_id_mut(&mut new_elements, &element_id) {
+                console::log_1(&format!("Найден элемент для обновления: {} ({})", element.name, element.id).into());
+                
+                let mut updated = false;
+                // Находим компонент того же типа и обновляем его
+                for component in element.components.iter_mut() {
+                    if component.component_type() == new_component.component_type() {
+                        *component = new_component.clone();
+                        updated = true;
+                        console::log_1(&format!("Компонент {} успешно обновлен", component.component_type()).into());
+                        break;
+                    }
+                }
+                
+                if updated {
+                    elements.set(new_elements);
+                    console::log_1(&"Состояние элементов успешно обновлено".into());
+                } else {
+                    console::log_1(&format!("Компонент типа {} не найден в элементе", 
+                        new_component.component_type()).into());
+                }
+            } else {
+                console::log_1(&format!("Элемент с id {} не найден для обновления компонента", 
+                    element_id).into());
+            }
         })
     };
     
@@ -111,6 +148,7 @@ pub fn app() -> Html {
                 <PropertiesPanel
                     elements={(*elements).clone()}
                     selected_id={(*selected_id).clone()}
+                    on_update_component={on_update_component.clone()}
                 />
             </div>
         </div>
@@ -132,13 +170,13 @@ fn find_element_by_id<'a>(elements: &'a [Element], id: &str) -> Option<&'a Eleme
 
 fn find_element_by_id_mut<'a>(elements: &'a mut [Element], id: &str) -> Option<&'a mut Element> {
     for element in elements {
-        console::log_1(&format!("Checking element: {} ({})", element.name, element.id).into());
+
         if element.id == id {
-            console::log_1(&format!("Found element: {} ({})", element.name, element.id).into());
+
             return Some(element);
         }
         if !element.children.is_empty() {
-            console::log_1(&format!("Checking children of: {} ({})", element.name, element.id).into());
+
             if let Some(found) = find_element_by_id_mut(&mut element.children, id) {
                 return Some(found);
             }
@@ -150,13 +188,13 @@ fn find_element_by_id_mut<'a>(elements: &'a mut [Element], id: &str) -> Option<&
 fn remove_element_by_id(elements: &mut Vec<Element>, id: &str) -> Option<Element> {
     let mut i = 0;
     while i < elements.len() {
-        console::log_1(&format!("Checking for removal: {} ({})", elements[i].name, elements[i].id).into());
+
         if elements[i].id == id {
-            console::log_1(&format!("Removing element: {} ({})", elements[i].name, elements[i].id).into());
+
             return Some(elements.remove(i));
         }
         if !elements[i].children.is_empty() {
-            console::log_1(&format!("Checking children of: {} ({})", elements[i].name, elements[i].id).into());
+
             if let Some(element) = remove_element_by_id(&mut elements[i].children, id) {
                 return Some(element);
             }
