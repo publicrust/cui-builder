@@ -1,30 +1,21 @@
 #![deny(clippy::disallowed_types)]
-#![warn(clippy::disallowed_types)]
 
-mod components;
-
-use components::{
-    infinite_canvas::InfiniteCanvas,
-    sidebar::Sidebar,
-    properties::PropertiesPanel,
-    Element, Component,
-};
 use yew::prelude::*;
+use cui_builder::{
+    Element,
+    components::{
+        canvas::infinite::InfiniteCanvas,
+        sidebar::{element_item::ElementItem, toolbar::Toolbar},
+        properties::panel::PropertiesPanel,
+    },
+};
 use web_sys::console;
-use cui_builder::*;
 
 #[function_component(App)]
 pub fn app() -> Html {
-    let elements = use_state(|| vec![]);
-    let selected_id = use_state(|| None::<String>);
-    
-    let on_select = {
-        let selected_id = selected_id.clone();
-        Callback::from(move |id: String| {
-            console::log_1(&format!("MAIN: Выбран элемент {}", id).into());
-            selected_id.set(Some(id));
-        })
-    };
+    let elements = use_state(Vec::new);
+    let selected_id = use_state(|| None);
+    let is_reparenting = use_state(|| false);
     
     let on_add_element = {
         let elements = elements.clone();
@@ -35,83 +26,93 @@ pub fn app() -> Html {
         })
     };
     
-    let on_component_change = {
-        let elements = elements.clone();
-        Callback::from(move |(id, component): (String, Component)| {
-            let mut new_elements = (*elements).clone();
-            if let Some(element) = new_elements.iter_mut().find(|e| e.id == id) {
-                if let Some(existing_component) = element.components.iter_mut()
-                    .find(|c| c.component_type() == component.component_type()) {
-                    *existing_component = component;
-                }
-            }
-            elements.set(new_elements);
+    let on_select = {
+        let selected_id = selected_id.clone();
+        Callback::from(move |id: String| {
+            console::log_1(&format!("Selected element: {}", id).into());
+            selected_id.set(Some(id));
         })
     };
     
     let on_reparent = {
         let elements = elements.clone();
-        Callback::from(move |(id, parent_id): (String, Option<String>)| {
+        let is_reparenting = is_reparenting.clone();
+        Callback::from(move |(child_id, new_parent_id): (String, Option<String>)| {
+            if *is_reparenting {
+                console::log_1(&"Already reparenting, skipping".into());
+                return;
+            }
+            is_reparenting.set(true);
+            
+            console::log_1(&format!("Reparenting {} to {:?}", child_id, new_parent_id).into());
+            
             let mut new_elements = (*elements).clone();
             
-            // Находим и удаляем элемент из его текущего местоположения
-            let element = remove_element_by_id(&mut new_elements, &id);
-            
-            if let Some(element) = element {
-                match parent_id {
+            // Находим и удаляем элемент из любого места в иерархии
+            if let Some(child_element) = remove_element_by_id(&mut new_elements, &child_id) {
+                console::log_1(&format!("Found and removed child element: {} ({})", child_element.name, child_element.id).into());
+                
+                match new_parent_id {
+                    // Добавляем элемент к новому родителю
                     Some(parent_id) => {
-                        // Добавляем элемент к новому родителю
+                        console::log_1(&format!("Looking for parent: {}", parent_id).into());
                         if let Some(parent) = find_element_by_id_mut(&mut new_elements, &parent_id) {
-                            parent.children.push(element);
+                            console::log_1(&format!("Found parent: {} ({})", parent.name, parent.id).into());
+                            parent.children.push(child_element);
+                            console::log_1(&"Added child to new parent".into());
+                        } else {
+                            console::log_1(&"Parent not found, adding back to root".into());
+                            new_elements.push(child_element);
                         }
                     }
+                    // Добавляем элемент в корень
                     None => {
-                        // Добавляем элемент в корень
-                        new_elements.push(element);
+                        console::log_1(&"Adding child to root".into());
+                        new_elements.push(child_element);
                     }
                 }
                 elements.set(new_elements);
+            } else {
+                console::log_1(&"Child element not found".into());
             }
+            
+            is_reparenting.set(false);
         })
     };
     
-    let selected_element = {
-        let elements = (*elements).clone();
-        let selected_id = (*selected_id).clone();
-        let element = selected_id.and_then(|id| {
-            console::log_1(&format!("MAIN: Поиск элемента с id={}", id).into());
-            let found = find_element_by_id(&elements, &id);
-            if found.is_some() {
-                console::log_1(&"MAIN: Элемент найден".into());
-            } else {
-                console::log_1(&"MAIN: Элемент не найден".into());
-            }
-            found.cloned()
-        });
-        element
-    };
-
     html! {
         <div class="app">
-            <Sidebar
-                elements={(*elements).clone()}
-                selected_id={(*selected_id).clone()}
-                on_select={on_select.clone()}
-                on_add_element={on_add_element}
-                on_reparent={on_reparent.clone()}
-            />
-            
-            <InfiniteCanvas
-                elements={(*elements).clone()}
-                selected_id={(*selected_id).clone()}
-                on_select={on_select}
-                on_reparent={on_reparent}
-            />
-            
-            <PropertiesPanel
-                selected_element={selected_element}
-                on_component_change={on_component_change}
-            />
+            <div class="sidebar">
+                <div class="toolbar">
+                    <Toolbar {on_add_element} />
+                </div>
+                <div class="hierarchy">
+                    {for (*elements).iter().map(|element| {
+                        html! {
+                            <ElementItem
+                                element={element.clone()}
+                                selected_id={(*selected_id).clone()}
+                                on_select={on_select.clone()}
+                                on_reparent={on_reparent.clone()}
+                            />
+                        }
+                    })}
+                </div>
+            </div>
+            <div class="workspace">
+                <InfiniteCanvas
+                    elements={(*elements).clone()}
+                    selected_id={(*selected_id).clone()}
+                    on_select={on_select.clone()}
+                    on_reparent={on_reparent.clone()}
+                />
+            </div>
+            <div class="properties-panel">
+                <PropertiesPanel
+                    elements={(*elements).clone()}
+                    selected_id={(*selected_id).clone()}
+                />
+            </div>
         </div>
     }
 }
@@ -131,11 +132,16 @@ fn find_element_by_id<'a>(elements: &'a [Element], id: &str) -> Option<&'a Eleme
 
 fn find_element_by_id_mut<'a>(elements: &'a mut [Element], id: &str) -> Option<&'a mut Element> {
     for element in elements {
+        console::log_1(&format!("Checking element: {} ({})", element.name, element.id).into());
         if element.id == id {
+            console::log_1(&format!("Found element: {} ({})", element.name, element.id).into());
             return Some(element);
         }
-        if let Some(found) = find_element_by_id_mut(&mut element.children, id) {
-            return Some(found);
+        if !element.children.is_empty() {
+            console::log_1(&format!("Checking children of: {} ({})", element.name, element.id).into());
+            if let Some(found) = find_element_by_id_mut(&mut element.children, id) {
+                return Some(found);
+            }
         }
     }
     None
@@ -144,11 +150,16 @@ fn find_element_by_id_mut<'a>(elements: &'a mut [Element], id: &str) -> Option<&
 fn remove_element_by_id(elements: &mut Vec<Element>, id: &str) -> Option<Element> {
     let mut i = 0;
     while i < elements.len() {
+        console::log_1(&format!("Checking for removal: {} ({})", elements[i].name, elements[i].id).into());
         if elements[i].id == id {
+            console::log_1(&format!("Removing element: {} ({})", elements[i].name, elements[i].id).into());
             return Some(elements.remove(i));
         }
-        if let Some(element) = remove_element_by_id(&mut elements[i].children, id) {
-            return Some(element);
+        if !elements[i].children.is_empty() {
+            console::log_1(&format!("Checking children of: {} ({})", elements[i].name, elements[i].id).into());
+            if let Some(element) = remove_element_by_id(&mut elements[i].children, id) {
+                return Some(element);
+            }
         }
         i += 1;
     }

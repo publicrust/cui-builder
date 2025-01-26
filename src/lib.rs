@@ -12,6 +12,11 @@
 #![deny(clippy::use_debug)]
 #![deny(clippy::disallowed_types)]
 
+pub mod models;
+pub mod core;
 pub mod components;
+pub mod styles;
 
-pub use components::*; 
+// Re-export commonly used types
+pub use models::{Element, ElementType};
+pub use core::component::Component; 
