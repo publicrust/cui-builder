@@ -44,10 +44,13 @@ body {
 }
 
 .app {
-    width: 100vw;
-    height: 100vh;
     display: flex;
-    overflow: hidden;
+    height: 100vh;
+    background: #1e1e1e;
+    color: #ffffff;
+    font-family: system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .main-content {
@@ -64,11 +67,11 @@ body {
     top: 0;
     bottom: 0;
     width: 250px;
-    background-color: #252526;
+    background: #252526;
     border-right: 1px solid #3c3c3c;
+    z-index: 1000;
     display: flex;
     flex-direction: column;
-    z-index: 1000;
 }
 
 .sidebar-header {
@@ -83,111 +86,98 @@ body {
 }
 
 .element-tools {
+    padding: 16px;
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr 1fr;
     gap: 0.5rem;
 }
 
-.tool-button {
+.element-tools button {
     background: #3c3c3c;
     border: none;
-    border-radius: 4px;
-    padding: 8px;
     color: #ffffff;
+    padding: 8px;
+    border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.2s;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    text-align: center;
 }
 
-.tool-button:hover {
+.element-tools button:hover {
     background: #4c4c4c;
 }
 
-.elements-tree {
+.element-list {
     flex: 1;
     overflow-y: auto;
-    padding: 1rem;
-}
-
-.element-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+    padding: 16px;
 }
 
 .element-item {
-    margin: 0.25rem 0;
-    padding-left: 1rem;
+    margin-bottom: 4px;
 }
 
 .element-item .element-list {
-    margin-left: 1rem;
+    padding-left: 16px;
     border-left: 1px solid #3c3c3c;
-    padding-left: 0.5rem;
 }
 
 .element-header {
     display: flex;
     align-items: center;
-    padding: 0.5rem;
+    padding: 4px 8px;
     border-radius: 4px;
     cursor: move;
-    transition: background-color 0.2s;
+    user-select: none;
 }
 
 .element-header:hover {
-    background: #3c3c3c;
+    background: #2d2d2d;
+}
+
+.element-header.selected {
+    background: #094771;
 }
 
 .element-header.drag-over {
-    background: #4c4c4c;
-    border: 1px dashed #007acc;
+    background: #2d2d2d;
+    border: 1px dashed #3794ff;
 }
 
 .element-icon {
-    margin-right: 0.5rem;
-    opacity: 0.7;
+    margin-right: 8px;
+    font-size: 16px;
 }
 
 .element-name {
-    font-size: 0.9rem;
-    color: #cccccc;
     flex: 1;
+    font-size: 14px;
 }
 
 /* Editor styles */
 .infinite-canvas {
-    width: 100%;
-    height: 100%;
-    position: relative;
+    flex: 1;
+    margin: 0 250px 0 250px;
     overflow: hidden;
+    position: relative;
+    background: #1e1e1e;
     cursor: default;
-    user-select: none;
 }
 
 .infinite-canvas.panning {
     cursor: grabbing;
+    cursor: -webkit-grabbing;
+    cursor: -moz-grabbing;
 }
 
 .workspace {
     position: absolute;
-    top: 50%;
     left: 50%;
+    top: 50%;
     width: 10000px;
     height: 10000px;
     transform-origin: center center;
-    margin-left: -5000px;
-    margin-top: -5000px;
-    background: #2d2d2d;
-    background-image: 
-        linear-gradient(to right, rgba(51, 51, 51, 0.8) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(51, 51, 51, 0.8) 1px, transparent 1px),
-        linear-gradient(to right, rgba(51, 51, 51, 0.3) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(51, 51, 51, 0.3) 1px, transparent 1px);
-    background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+    background: rgba(255, 255, 255, 0.02);
+    pointer-events: none;
 }
 
 .workspace > * {
@@ -195,39 +185,57 @@ body {
 }
 
 .unity-canvas {
-    background: #1e1e1e;
-    border: 1px solid #3c3c3c;
+    position: absolute;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    pointer-events: auto;
+    cursor: default;
 }
 
 .unity-canvas.selected {
-    border: 2px solid #0078d4;
-    box-shadow: 0 0 0 1px #0078d4;
+    border-color: #3794ff;
+    z-index: 1;
+}
+
+.unity-canvas.drag-over {
+    border: 2px dashed #3794ff;
+    background: rgba(55, 148, 255, 0.1);
 }
 
 .unity-canvas-content {
     width: 100%;
     height: 100%;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     background: rgba(255, 255, 255, 0.02);
 }
 
 .unity-element {
     position: absolute;
-    min-width: 50px;
-    min-height: 50px;
-    background: rgba(60, 60, 60, 0.5);
-    border: 1px solid #3c3c3c;
-    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
     cursor: move;
 }
 
 .unity-element.selected {
-    border: 1px solid #0078d4;
-    box-shadow: 0 0 0 1px #0078d4;
+    border-color: #3794ff;
+    z-index: 1;
+}
+
+.unity-element.drag-over {
+    border: 2px dashed #3794ff;
+    background: rgba(55, 148, 255, 0.1);
+}
+
+.unity-element > * {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: auto;
 }
 
 .container-content {
@@ -260,31 +268,30 @@ body {
 
 .rulers {
     position: absolute;
-    top: 0;
     left: 0;
+    top: 0;
     right: 0;
     bottom: 0;
     pointer-events: none;
 }
 
 .ruler {
-    background: #2d2d2d;
     position: absolute;
-    pointer-events: none;
+    background: rgba(255, 255, 255, 0.1);
 }
 
-.ruler-horizontal {
-    top: 0;
+.ruler.horizontal {
     left: 0;
-    right: 0;
-    height: 20px;
+    top: 50%;
+    width: 100%;
+    height: 1px;
 }
 
-.ruler-vertical {
+.ruler.vertical {
+    left: 50%;
     top: 0;
-    left: 0;
-    bottom: 0;
-    width: 20px;
+    width: 1px;
+    height: 100%;
 }
 
 .properties-panel {
@@ -293,10 +300,9 @@ body {
     top: 0;
     bottom: 0;
     width: 300px;
-    background-color: #252526;
+    background: #252526;
     border-left: 1px solid #3c3c3c;
-    padding: 1rem;
-    z-index: 1000;
+    padding: 16px;
     overflow-y: auto;
 }
 
@@ -304,34 +310,33 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #666666;
+    color: #6d6d6d;
 }
 
 .properties-panel h3 {
-    margin: 0 0 20px 0;
+    margin: 0 0 16px 0;
     font-size: 16px;
     font-weight: 500;
-    color: #fff;
 }
 
 .property-group {
-    margin-bottom: 20px;
-    padding: 15px;
-    background-color: #363636;
-    border-radius: 6px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: #2d2d2d;
+    border-radius: 4px;
 }
 
 .property-group h4 {
-    margin: 0 0 15px 0;
+    margin: 0 0 12px 0;
     font-size: 14px;
     font-weight: 500;
-    color: #aaa;
+    color: #cccccc;
 }
 
 .property-row {
     display: flex;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .property-row:last-child {
@@ -339,45 +344,60 @@ body {
 }
 
 .property-row label {
-    flex: 0 0 80px;
-    font-size: 13px;
-    color: #ddd;
+    flex: 1;
+    font-size: 12px;
+    color: #cccccc;
 }
 
 .property-row input {
-    flex: 1;
-    background-color: #1e1e1e;
-    border: 1px solid #3d3d3d;
-    border-radius: 4px;
-    padding: 6px 8px;
-    color: #fff;
-    font-size: 13px;
+    width: 120px;
+    background: #3c3c3c;
+    border: 1px solid #3c3c3c;
+    color: #ffffff;
+    padding: 4px 8px;
+    border-radius: 2px;
+    font-size: 12px;
 }
 
 .property-row input:focus {
     outline: none;
-    border-color: #007acc;
+    border-color: #3794ff;
 }
 
-.property-row input::-webkit-inner-spin-button,
-.property-row input::-webkit-outer-spin-button {
+.property-row input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.property-row input[type="number"]::-webkit-outer-spin-button,
+.property-row input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
-}
-
-.property-row input[type=number] {
-    -moz-appearance: textfield;
 }
 
 .toolbar {
     position: fixed;
     top: 20px;
-    left: 20px;
-    z-index: 1000;
-    background: #252526;
-    padding: 10px;
-    border-radius: 4px;
+    left: 270px;
+    right: 320px;
+    background: #2d2d2d;
+    padding: 8px;
+    border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+.toolbar button {
+    background: #3c3c3c;
+    border: none;
+    color: #ffffff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 8px;
+}
+
+.toolbar button:hover {
+    background: #4c4c4c;
 }
 
 .zoom-controls {

@@ -1,24 +1,27 @@
 use yew::prelude::*;
-use super::{Element, Transform, ElementType};
+use super::{Element, ElementType};
+use super::component::RectTransformComponent;
 
 #[derive(Properties, PartialEq)]
 pub struct UnityCanvasProps {
     pub element: Element,
-    pub on_element_move: Option<Callback<(String, Transform)>>,
+    pub on_element_move: Option<Callback<(String, RectTransformComponent)>>,
     pub on_select: Option<Callback<String>>,
 }
 
 #[function_component(UnityCanvas)]
 pub fn unity_canvas(props: &UnityCanvasProps) -> Html {
     let element = &props.element;
-    let transform = element.transform.as_ref().expect("UnityCanvas должен иметь transform");
+    let transform = element.components.iter()
+        .find_map(|c| c.as_any().downcast_ref::<RectTransformComponent>())
+        .expect("UnityCanvas должен иметь RectTransformComponent");
     
     let style = format!(
         "position: absolute; left: {}px; top: {}px; width: {}px; height: {}px;",
-        transform.x,
-        transform.y,
-        transform.width,
-        transform.height,
+        transform.offset_min.0,
+        transform.offset_min.1,
+        transform.offset_max.0 - transform.offset_min.0,
+        transform.offset_max.1 - transform.offset_min.1,
     );
 
     let on_mousedown = {
@@ -50,14 +53,16 @@ pub struct UnityElementProps {
 #[function_component(UnityElement)]
 pub fn unity_element(props: &UnityElementProps) -> Html {
     let element = &props.element;
-    let rect_transform = element.rect_transform.as_ref().expect("Дочерние элементы должны иметь rect_transform");
+    let rect_transform = element.components.iter()
+        .find_map(|c| c.as_any().downcast_ref::<RectTransformComponent>())
+        .expect("Дочерние элементы должны иметь RectTransformComponent");
 
     let style = format!(
         "position: absolute; left: {}%; top: {}%; right: {}%; bottom: {}%;",
-        rect_transform.anchor_min.x * 100.0,
-        rect_transform.anchor_min.y * 100.0,
-        (1.0 - rect_transform.anchor_max.x) * 100.0,
-        (1.0 - rect_transform.anchor_max.y) * 100.0,
+        rect_transform.anchor_min.0 * 100.0,
+        rect_transform.anchor_min.1 * 100.0,
+        (1.0 - rect_transform.anchor_max.0) * 100.0,
+        (1.0 - rect_transform.anchor_max.1) * 100.0,
     );
 
     let element_class = match element.element_type {

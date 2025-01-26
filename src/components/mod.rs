@@ -2,8 +2,10 @@ pub mod sidebar;
 pub mod properties;
 pub mod infinite_canvas;
 pub mod unity_canvas;
+pub mod component;
 
 use serde::{Deserialize, Serialize};
+pub use component::CuiComponent;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Anchor {
@@ -98,17 +100,26 @@ pub struct CanvasObject {
 }
 
 // Элементы внутри Unity-канваса
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Element {
     pub id: String,
     pub name: String,
     pub element_type: ElementType,
-    pub transform: Option<Transform>,      // Для UnityCanvas
-    pub rect_transform: Option<RectTransform>, // Для дочерних элементов
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub components: Vec<Box<dyn CuiComponent>>,
     pub children: Vec<Element>,
 }
 
-#[derive(Clone, PartialEq)]
+impl PartialEq for Element {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id 
+            && self.name == other.name 
+            && self.element_type == other.element_type
+            && self.children == other.children
+    }
+}
+
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum ElementType {
     UnityCanvas,
     Panel,
