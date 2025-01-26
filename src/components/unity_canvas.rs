@@ -1,46 +1,67 @@
 use yew::prelude::*;
-use super::{Element, ElementType};
-use super::component::RectTransformComponent;
+use crate::components::{Element, Component, ElementType};
+use crate::components::component::RectTransformComponent;
 
 #[derive(Properties, PartialEq)]
 pub struct UnityCanvasProps {
     pub element: Element,
-    pub on_element_move: Option<Callback<(String, RectTransformComponent)>>,
-    pub on_select: Option<Callback<String>>,
+    pub selected_id: Option<String>,
+    pub on_select: Callback<String>,
+    pub on_reparent: Callback<(String, Option<String>)>,
+}
+
+fn get_rect_transform(element: &Element) -> Option<&RectTransformComponent> {
+    element.components.iter()
+        .find_map(|c| match c {
+            Component::RectTransform(t) => Some(t),
+            _ => None,
+        })
 }
 
 #[function_component(UnityCanvas)]
 pub fn unity_canvas(props: &UnityCanvasProps) -> Html {
-    let element = &props.element;
-    let transform = element.components.iter()
-        .find_map(|c| c.as_any().downcast_ref::<RectTransformComponent>())
-        .expect("UnityCanvas должен иметь RectTransformComponent");
-    
-    let style = format!(
-        "position: absolute; left: {}px; top: {}px; width: {}px; height: {}px;",
-        transform.offset_min.0,
-        transform.offset_min.1,
-        transform.offset_max.0 - transform.offset_min.0,
-        transform.offset_max.1 - transform.offset_min.1,
-    );
+    let element_class = if Some(props.element.id.clone()) == props.selected_id {
+        "unity-canvas selected"
+    } else {
+        "unity-canvas"
+    };
 
-    let on_mousedown = {
+    let onclick = {
         let on_select = props.on_select.clone();
-        let id = element.id.clone();
+        let id = props.element.id.clone();
         Callback::from(move |_| {
-            if let Some(on_select) = &on_select {
-                on_select.emit(id.clone());
-            }
+            on_select.emit(id.clone());
         })
     };
 
+    let style = if let Some(transform) = get_rect_transform(&props.element) {
+        format!(
+            "position: absolute; left: {}%; top: {}%; right: {}%; bottom: {}%;",
+            transform.anchor_min.0 * 100.0,
+            transform.anchor_min.1 * 100.0,
+            (1.0 - transform.anchor_max.0) * 100.0,
+            (1.0 - transform.anchor_max.1) * 100.0
+        )
+    } else {
+        String::new()
+    };
+
     html! {
-        <div class="unity-canvas" {style} onmousedown={on_mousedown}>
-            <div class="unity-canvas-content">
-                {for element.children.iter().map(|child| html! {
-                    <UnityElement element={child.clone()} />
-                })}
-            </div>
+        <div
+            class={element_class}
+            style={style}
+            onclick={onclick}
+        >
+            {for props.element.children.iter().map(|child| {
+                html! {
+                    <UnityCanvas
+                        element={child.clone()}
+                        selected_id={props.selected_id.clone()}
+                        on_select={props.on_select.clone()}
+                        on_reparent={props.on_reparent.clone()}
+                    />
+                }
+            })}
         </div>
     }
 }
@@ -54,7 +75,10 @@ pub struct UnityElementProps {
 pub fn unity_element(props: &UnityElementProps) -> Html {
     let element = &props.element;
     let rect_transform = element.components.iter()
-        .find_map(|c| c.as_any().downcast_ref::<RectTransformComponent>())
+        .find_map(|c| match c {
+            Component::RectTransform(t) => Some(t),
+            _ => None,
+        })
         .expect("Дочерние элементы должны иметь RectTransformComponent");
 
     let style = format!(

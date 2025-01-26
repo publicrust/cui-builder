@@ -1,0 +1,23 @@
+forbidden-types = [
+    { path = "std::any::Any", reason = "Использование Any запрещено. Используйте enum для типобезопасности." }
+]
+
+deny = [
+    "clippy::unwrap_used",
+    "clippy::expect_used",
+    "clippy::panic",
+    "clippy::todo",
+    "clippy::unimplemented",
+    "clippy::unreachable",
+    "clippy::print_stdout",
+    "clippy::dbg_macro",
+    "clippy::use_debug"
+]
+
+disallowed-types = ["std::any::Any"]
+disallowed-names = ["Any"]
+type-complexity-threshold = 100
+cognitive-complexity-threshold = 20
+too-many-arguments-threshold = 7
+msrv = "1.70.0"
+doc-valid-idents = ["Any"] 

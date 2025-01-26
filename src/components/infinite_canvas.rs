@@ -1,7 +1,7 @@
-use web_sys::{MouseEvent, WheelEvent, DragEvent, TouchEvent, TouchList, console, Event};
+use web_sys::{MouseEvent, WheelEvent, DragEvent, TouchEvent, console};
 use yew::prelude::*;
 use crate::components::Element;
-use crate::components::component::{RectTransformComponent, UnityCanvasTransform};
+use crate::components::component::Component;
 use wasm_bindgen::JsCast;
 
 #[derive(Properties, PartialEq)]

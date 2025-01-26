@@ -1,7 +1,7 @@
 use yew::prelude::*;
 use uuid::Uuid;
 use super::{Element, ElementType};
-use super::component::{RectTransformComponent, ImageComponent, TextComponent, UnityCanvasTransform};
+use super::component::{RectTransformComponent, ImageComponent, UnityCanvasTransform, Component};
 use web_sys::{DragEvent, console};
 
 #[derive(Properties, PartialEq)]

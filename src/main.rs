@@ -1,13 +1,17 @@
+#![deny(clippy::disallowed_types)]
+#![warn(clippy::disallowed_types)]
+
 mod components;
 
 use components::{
     infinite_canvas::InfiniteCanvas,
     sidebar::Sidebar,
     properties::PropertiesPanel,
-    Component, Element, ElementType,
+    Element, Component,
 };
 use yew::prelude::*;
 use web_sys::console;
+use cui_builder::*;
 
 #[function_component(App)]
 pub fn app() -> Html {
