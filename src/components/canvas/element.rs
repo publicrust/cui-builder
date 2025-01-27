@@ -1,7 +1,7 @@
 use yew::prelude::*;
 use web_sys::{MouseEvent, Element as WebElement};
-use crate::models::Element;
-use crate::core::component::{Component, UnityCanvasTransform};
+use crate::models::{Element, ElementType};
+use crate::core::component::{Component, UnityCanvasTransform, RectTransformComponent};
 use wasm_bindgen::JsCast;
 
 #[derive(Properties, PartialEq)]
@@ -100,21 +100,54 @@ pub fn unity_element(props: &UnityElementProps) -> Html {
         (*dragging).then_some("dragging")
     );
 
-    let style = if let Some(transform) = props.element.components.iter()
-        .find(|c| c.component_type() == "UnityCanvasTransform")
-        .and_then(|c| match c {
-            Component::UnityCanvasTransform(t) => Some(t),
-            _ => None,
-        }) {
-        format!(
-            "position: absolute; left: {}px; top: {}px; width: {}px; height: {}px;",
-            transform.x,
-            transform.y,
-            transform.width,
-            transform.height
-        )
+    let style = if props.element.element_type == ElementType::UnityCanvas {
+        // Для UnityCanvas используем абсолютное позиционирование
+        if let Some(transform) = props.element.components.iter()
+            .find(|c| c.component_type() == "UnityCanvasTransform")
+            .and_then(|c| match c {
+                Component::UnityCanvasTransform(t) => Some(t),
+                _ => None,
+            }) {
+            format!(
+                "position: absolute; left: {}px; top: {}px; width: {}px; height: {}px;",
+                transform.x,
+                transform.y,
+                transform.width,
+                transform.height
+            )
+        } else {
+            String::new()
+        }
     } else {
-        String::new()
+        // Для дочерних элементов используем anchor и offset с инвертированием по Y
+        if let Some(transform) = props.element.components.iter()
+            .find(|c| c.component_type() == "RectTransform")
+            .and_then(|c| match c {
+                Component::RectTransform(t) => Some(t),
+                _ => None,
+            }) {
+            format!(
+                "position: absolute; \
+                left: {}%; \
+                right: {}%; \
+                bottom: {}%; \
+                top: {}%; \
+                margin-left: {}px; \
+                margin-right: {}px; \
+                margin-bottom: {}px; \
+                margin-top: {}px;",
+                transform.anchor_min.0 * 100.0,
+                (1.0 - transform.anchor_max.0) * 100.0,
+                transform.anchor_min.1 * 100.0, // Используем anchor_min.y для bottom
+                (1.0 - transform.anchor_max.1) * 100.0, // Используем anchor_max.y для top
+                transform.offset_min.0,
+                -transform.offset_max.0,
+                transform.offset_min.1, // Используем offset_min.y для margin-bottom
+                -transform.offset_max.1 // Используем offset_max.y для margin-top
+            )
+        } else {
+            String::new()
+        }
     };
 
     html! {
