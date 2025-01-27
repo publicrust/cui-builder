@@ -250,6 +250,7 @@ body {
     overflow: hidden;
 }
 
+/* Контейнер для содержимого UnityCanvas */
 .unity-element[data-type="UnityCanvas"] > .unity-element-container {
     position: absolute;
     width: 100%;
@@ -258,13 +259,19 @@ body {
     transform: scale(1, -1);
 }
 
-.unity-element[data-type="Panel"] {
+/* Общие стили для всех элементов внутри UnityCanvas */
+.unity-element[data-type="UnityCanvas"] .unity-element {
     position: absolute;
     background: rgba(60, 60, 60, 0.8);
     border: 1px solid #555;
     display: flex;
     flex-direction: column;
     transform: scale(1, -1);
+}
+
+/* Стили для вложенных элементов */
+.unity-element[data-type="UnityCanvas"] .unity-element .unity-element {
+    transform: none; /* Отменяем инвертирование для вложенных элементов, так как они уже инвертированы родителем */
 }
 
 .unity-element.selected {

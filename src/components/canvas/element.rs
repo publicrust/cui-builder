@@ -167,18 +167,35 @@ pub fn unity_element(props: &UnityElementProps) -> Html {
                 })
             }
         >
-            {&props.element.name}
-            {for props.element.children.iter().map(|child| {
-                html! {
-                    <UnityElement
-                        element={child.clone()}
-                        selected_id={props.selected_id.clone()}
-                        on_select={props.on_select.clone()}
-                        on_reparent={props.on_reparent.clone()}
-                        on_update_component={props.on_update_component.clone()}
-                    />
-                }
-            })}
+            if props.element.element_type == ElementType::UnityCanvas {
+                <div class="unity-element-container">
+                    {&props.element.name}
+                    {for props.element.children.iter().map(|child| {
+                        html! {
+                            <UnityElement
+                                element={child.clone()}
+                                selected_id={props.selected_id.clone()}
+                                on_select={props.on_select.clone()}
+                                on_reparent={props.on_reparent.clone()}
+                                on_update_component={props.on_update_component.clone()}
+                            />
+                        }
+                    })}
+                </div>
+            } else {
+                {&props.element.name}
+                {for props.element.children.iter().map(|child| {
+                    html! {
+                        <UnityElement
+                            element={child.clone()}
+                            selected_id={props.selected_id.clone()}
+                            on_select={props.on_select.clone()}
+                            on_reparent={props.on_reparent.clone()}
+                            on_update_component={props.on_update_component.clone()}
+                        />
+                    }
+                })}
+            }
         </div>
     }
 } 
