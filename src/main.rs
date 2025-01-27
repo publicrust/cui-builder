@@ -142,6 +142,7 @@ pub fn app() -> Html {
                     selected_id={(*selected_id).clone()}
                     on_select={on_select.clone()}
                     on_reparent={on_reparent.clone()}
+                    on_update_component={on_update_component.clone()}
                 />
             </div>
             <div class="properties-panel">

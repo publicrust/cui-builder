@@ -11,6 +11,7 @@ pub struct InfiniteCanvasProps {
     pub selected_id: Option<String>,
     pub on_select: Callback<String>,
     pub on_reparent: Callback<(String, Option<String>)>,
+    pub on_update_component: Callback<(String, Component)>,
 }
 
 #[derive(Clone, PartialEq)]
@@ -88,7 +89,7 @@ pub fn infinite_canvas(props: &InfiniteCanvasProps) -> Html {
 
     let workspace_style = format!(
         "transform: translate({}px, {}px) scale({});",
-        0.0, 0.0, 1.0  // Убираем трансформацию с workspace
+        workspace_state.offset_x, workspace_state.offset_y, workspace_state.scale
     );
 
     // Вычисляем размер ячейки сетки в зависимости от масштаба
@@ -149,21 +150,16 @@ pub fn infinite_canvas(props: &InfiniteCanvasProps) -> Html {
                     <div class="grid large" style={format!("background-size: {}px {}px;", base_grid_size * 4.0, base_grid_size * 4.0)}></div>
                 }
             </div>
-            <div class="workspace">
+            <div class="workspace" style={workspace_style}>
                 {for props.elements.iter().map(|element| {
-                    let element_style = format!(
-                        "transform: translate({}px, {}px) scale({});",
-                        workspace_state.offset_x, workspace_state.offset_y, workspace_state.scale
-                    );
                     html! {
-                        <div style={element_style}>
-                            <UnityElement
-                                element={element.clone()}
-                                selected_id={props.selected_id.clone()}
-                                on_select={props.on_select.clone()}
-                                on_reparent={props.on_reparent.clone()}
-                            />
-                        </div>
+                        <UnityElement
+                            element={element.clone()}
+                            selected_id={props.selected_id.clone()}
+                            on_select={props.on_select.clone()}
+                            on_reparent={props.on_reparent.clone()}
+                            on_update_component={props.on_update_component.clone()}
+                        />
                     }
                 })}
             </div>

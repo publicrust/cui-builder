@@ -1,7 +1,8 @@
 use yew::prelude::*;
-use web_sys::{MouseEvent, console};
+use web_sys::{MouseEvent, Element as WebElement};
 use crate::models::Element;
-use crate::core::component::Component;
+use crate::core::component::{Component, UnityCanvasTransform};
+use wasm_bindgen::JsCast;
 
 #[derive(Properties, PartialEq)]
 pub struct UnityElementProps {
@@ -9,27 +10,95 @@ pub struct UnityElementProps {
     pub selected_id: Option<String>,
     pub on_select: Callback<String>,
     pub on_reparent: Callback<(String, Option<String>)>,
+    pub on_update_component: Callback<(String, Component)>,
 }
 
 #[function_component(UnityElement)]
 pub fn unity_element(props: &UnityElementProps) -> Html {
-    console::log_1(&format!("Отрисовка элемента: {} (id: {})", props.element.name, props.element.id).into());
-    
-    let element_class = if Some(props.element.id.clone()) == props.selected_id {
-        "unity-element selected"
-    } else {
-        "unity-element"
-    };
+    let dragging = use_state(|| false);
+    let initial_mouse_pos = use_state(|| None::<(f64, f64)>);
+    let initial_element_pos = use_state(|| None::<(f64, f64)>);
 
-    let onclick = {
-        let on_select = props.on_select.clone();
-        let id = props.element.id.clone();
+    let onmousedown = {
+        let dragging = dragging.clone();
+        let initial_mouse_pos = initial_mouse_pos.clone();
+        let initial_element_pos = initial_element_pos.clone();
+        let element = props.element.clone();
+
         Callback::from(move |e: MouseEvent| {
-            e.stop_propagation();
-            console::log_1(&format!("Клик по элементу: {}", id).into());
-            on_select.emit(id.clone());
+            if e.button() == 0 {
+                e.prevent_default();
+                e.stop_propagation();
+                dragging.set(true);
+                
+                initial_mouse_pos.set(Some((e.client_x() as f64, e.client_y() as f64)));
+                
+                // Получаем начальную позицию элемента из компонентов
+                let initial_pos = if let Some(transform) = element.components.iter()
+                    .find(|c| c.component_type() == "UnityCanvasTransform")
+                {
+                    if let Component::UnityCanvasTransform(t) = transform {
+                        (t.x, t.y)
+                    } else {
+                        (0.0, 0.0)
+                    }
+                } else {
+                    (0.0, 0.0)
+                };
+                
+                initial_element_pos.set(Some(initial_pos));
+            }
         })
     };
+
+    let onmousemove = {
+        let dragging = dragging.clone();
+        let initial_mouse_pos = initial_mouse_pos.clone();
+        let initial_element_pos = initial_element_pos.clone();
+        let on_update_component = props.on_update_component.clone();
+        let element_id = props.element.id.clone();
+        let element = props.element.clone();
+        
+        Callback::from(move |e: MouseEvent| {
+            if *dragging {
+                if let (Some((start_x, start_y)), Some((init_x, init_y))) = (*initial_mouse_pos, *initial_element_pos) {
+                    let dx = e.client_x() as f64 - start_x;
+                    let dy = e.client_y() as f64 - start_y;
+                    
+                    // Получаем текущие размеры из компонента
+                    if let Some(Component::UnityCanvasTransform(transform)) = element.components.iter()
+                        .find(|c| c.component_type() == "UnityCanvasTransform")
+                    {
+                        // Создаем новый компонент с обновленными координатами
+                        let new_transform = UnityCanvasTransform {
+                            x: init_x + dx,
+                            y: init_y + dy,
+                            width: transform.width,
+                            height: transform.height,
+                        };
+                        
+                        on_update_component.emit((element_id.clone(), Component::UnityCanvasTransform(new_transform)));
+                    }
+                }
+            }
+        })
+    };
+
+    let onmouseup = {
+        let dragging = dragging.clone();
+        
+        Callback::from(move |_: MouseEvent| {
+            dragging.set(false);
+            initial_mouse_pos.set(None);
+            initial_element_pos.set(None);
+        })
+    };
+
+    let element_class = classes!(
+        "unity-element",
+        props.selected_id.as_ref().map(|id| id == &props.element.id).unwrap_or(false).then_some("selected"),
+        (*dragging).then_some("dragging")
+    );
 
     let style = if let Some(transform) = props.element.components.iter()
         .find(|c| c.component_type() == "UnityCanvasTransform")
@@ -37,9 +106,6 @@ pub fn unity_element(props: &UnityElementProps) -> Html {
             Component::UnityCanvasTransform(t) => Some(t),
             _ => None,
         }) {
-        console::log_1(&format!("Применяем UnityCanvasTransform для {}: x={}, y={}, width={}, height={}", 
-            props.element.name, transform.x, transform.y, transform.width, transform.height).into());
-        
         format!(
             "position: absolute; left: {}px; top: {}px; width: {}px; height: {}px;",
             transform.x,
@@ -47,46 +113,7 @@ pub fn unity_element(props: &UnityElementProps) -> Html {
             transform.width,
             transform.height
         )
-    } else if let Some(transform) = props.element.components.iter()
-        .find(|c| c.component_type() == "RectTransform")
-        .and_then(|c| match c {
-            Component::RectTransform(t) => Some(t),
-            _ => None,
-        }) {
-        console::log_1(&format!("Применяем RectTransform для {}: anchor_min=({}, {}), anchor_max=({}, {}), offset_min=({}, {}), offset_max=({}, {})", 
-            props.element.name,
-            transform.anchor_min.0, transform.anchor_min.1,
-            transform.anchor_max.0, transform.anchor_max.1,
-            transform.offset_min.0, transform.offset_min.1,
-            transform.offset_max.0, transform.offset_max.1).into());
-        
-        let left = format!("{}%", transform.anchor_min.0 * 100.0);
-        let width = format!("{}%", (transform.anchor_max.0 - transform.anchor_min.0) * 100.0);
-        
-        let top = format!("{}%", (1.0 - transform.anchor_max.1) * 100.0);
-        let height = format!("{}%", (transform.anchor_max.1 - transform.anchor_min.1) * 100.0);
-        
-        let left_offset = format!("{}px", transform.offset_min.0);
-        let top_offset = format!("{}px", -transform.offset_max.1);
-        let width_offset = format!("{}px", transform.offset_max.0 - transform.offset_min.0);
-        let height_offset = format!("{}px", transform.offset_max.1 - transform.offset_min.1);
-
-        let style = format!(
-            "position: absolute; \
-             left: calc({} + {}); \
-             top: calc({} + {}); \
-             width: calc({} + {}); \
-             height: calc({} + {});",
-            left, left_offset,
-            top, top_offset,
-            width, width_offset,
-            height, height_offset
-        );
-        
-        console::log_1(&format!("Сгенерированный стиль для {}: {}", props.element.name, style).into());
-        style
     } else {
-        console::log_1(&format!("Элемент {} не имеет компонента трансформации", props.element.name).into());
         String::new()
     };
 
@@ -95,7 +122,17 @@ pub fn unity_element(props: &UnityElementProps) -> Html {
             class={element_class}
             data-type={props.element.element_type.to_string()}
             style={style}
-            onclick={onclick}
+            onmousedown={onmousedown}
+            onmousemove={onmousemove}
+            onmouseup={onmouseup}
+            onclick={
+                let on_select = props.on_select.clone();
+                let id = props.element.id.clone();
+                Callback::from(move |e: MouseEvent| {
+                    e.stop_propagation();
+                    on_select.emit(id.clone());
+                })
+            }
         >
             {&props.element.name}
             {for props.element.children.iter().map(|child| {
@@ -105,6 +142,7 @@ pub fn unity_element(props: &UnityElementProps) -> Html {
                         selected_id={props.selected_id.clone()}
                         on_select={props.on_select.clone()}
                         on_reparent={props.on_reparent.clone()}
+                        on_update_component={props.on_update_component.clone()}
                     />
                 }
             })}
