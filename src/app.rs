@@ -1,130 +1,134 @@
 use yew::prelude::*;
-use crate::models::{Element, Component};
-use crate::components::canvas::infinite::InfiniteCanvas;
-use crate::components::sidebar::toolbar::Toolbar;
+use uuid::Uuid;
+use crate::entities::cui_element::{
+    CuiElement,
+    components::{
+        RectTransform,
+        TextComponent,
+        ImageComponent,
+        CuiComponent
+    }
+};
+use crate::entities::cui_container::CuiContainer;
+use crate::components::canvas::CuiCanvas;
 use crate::components::properties::panel::PropertiesPanel;
 
-#[function_component(App)]
-pub fn app() -> Html {
-    let elements = use_state(|| vec![
-        Element {
-            id: "1".to_string(),
-            name: "Root".to_string(),
-            element_type: "Panel".to_string(),
-            components: vec![
-                Component::UnityCanvasTransform {
-                    x: 100.0,
-                    y: 100.0,
-                    width: 200.0,
-                    height: 200.0,
-                }
-            ],
-            children: vec![],
+pub struct App {
+    container: CuiContainer,
+    selected_id: Option<String>,
+}
+
+pub enum Msg {
+    AddRectangle,
+    AddText,
+    AddImage,
+    SelectElement(String),
+    UpdateElement(Box<dyn CuiComponent>),
+}
+
+impl Component for App {
+    type Message = Msg;
+    type Properties = ();
+
+    fn create(_ctx: &Context<Self>) -> Self {
+        Self {
+            container: CuiContainer::new(),
+            selected_id: None,
         }
-    ]);
-    
-    let selected_id = use_state(|| None::<String>);
+    }
 
-    let on_select = {
-        let selected_id = selected_id.clone();
-        Callback::from(move |id: String| {
-            selected_id.set(Some(id));
-        })
-    };
-
-    let on_reparent = {
-        let elements = elements.clone();
-        Callback::from(move |(child_id, new_parent_id): (String, Option<String>)| {
-            let mut new_elements = (*elements).clone();
-            
-            // Находим и удаляем элемент из старого родителя
-            let mut child_element = None;
-            let mut stack = vec![];
-            for element in new_elements.iter_mut() {
-                stack.push(element);
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+        match msg {
+            Msg::AddRectangle => {
+                let id = Uuid::new_v4().to_string();
+                let mut element = CuiElement::new(id.clone(), None);
+                element.add_component(Box::new(RectTransform::default()));
+                self.container.add_element(element);
+                self.selected_id = Some(id);
+                true
             }
-            
-            while let Some(element) = stack.pop() {
-                if let Some(idx) = element.children.iter().position(|e| e.id == child_id) {
-                    child_element = Some(element.children.remove(idx));
-                    break;
-                }
-                for child in element.children.iter_mut() {
-                    stack.push(child);
-                }
+            Msg::AddText => {
+                let id = Uuid::new_v4().to_string();
+                let mut element = CuiElement::new(id.clone(), None);
+                element.add_component(Box::new(RectTransform::default()));
+                element.add_component(Box::new(TextComponent::default()));
+                self.container.add_element(element);
+                self.selected_id = Some(id);
+                true
             }
-
-            // Добавляем элемент к новому родителю
-            if let Some(child) = child_element {
-                if let Some(parent_id) = new_parent_id {
-                    let mut stack = vec![];
-                    for element in new_elements.iter_mut() {
-                        stack.push(element);
-                    }
-                    
-                    while let Some(element) = stack.pop() {
-                        if element.id == parent_id {
-                            element.children.push(child);
-                            break;
-                        }
-                        for child in element.children.iter_mut() {
-                            stack.push(child);
+            Msg::AddImage => {
+                let id = Uuid::new_v4().to_string();
+                let mut element = CuiElement::new(id.clone(), None);
+                element.add_component(Box::new(RectTransform::default()));
+                element.add_component(Box::new(ImageComponent::default()));
+                self.container.add_element(element);
+                self.selected_id = Some(id);
+                true
+            }
+            Msg::SelectElement(id) => {
+                self.selected_id = Some(id);
+                true
+            }
+            Msg::UpdateElement(component) => {
+                if let Some(id) = &self.selected_id {
+                    if let Some(element) = self.container.find_element_mut(id) {
+                        let component_type = component.component_type();
+                        if let Some(existing) = element.components.iter_mut()
+                            .find(|c| c.component_type() == component_type) {
+                            *existing = component;
+                            return true;
                         }
                     }
-                } else {
-                    new_elements.push(child);
                 }
+                false
             }
-            
-            elements.set(new_elements);
-        })
-    };
+        }
+    }
 
-    let on_element_update = {
-        let elements = elements.clone();
-        Callback::from(move |updated_element: Element| {
-            let mut new_elements = (*elements).clone();
-            
-            // Обновляем элемент в дереве
-            let mut stack = vec![];
-            for element in new_elements.iter_mut() {
-                stack.push(element);
-            }
-            
-            while let Some(element) = stack.pop() {
-                if element.id == updated_element.id {
-                    *element = updated_element.clone();
-                    break;
-                }
-                for child in element.children.iter_mut() {
-                    stack.push(child);
-                }
-            }
-            
-            elements.set(new_elements);
-        })
-    };
-
-    html! {
-        <div class="app">
-            <div class="sidebar">
-                <Toolbar />
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let link = ctx.link();
+        
+        html! {
+            <div class="app">
+                <div class="toolbar">
+                    <button 
+                        onclick={link.callback(|_| Msg::AddRectangle)}
+                        class="button"
+                        style="background-color: #409effff"
+                    >
+                        {"Add Rectangle"}
+                    </button>
+                    <button 
+                        onclick={link.callback(|_| Msg::AddText)}
+                        class="button"
+                        style="background-color: #409effff"
+                    >
+                        {"Add Text"}
+                    </button>
+                    <button 
+                        onclick={link.callback(|_| Msg::AddImage)}
+                        class="button"
+                        style="background-color: #409effff"
+                    >
+                        {"Add Image"}
+                    </button>
+                </div>
+                <div class="workspace">
+                    <div class="canvas">
+                        <CuiCanvas
+                            container={self.container.clone()}
+                            selected_id={self.selected_id.clone()}
+                            on_select={ctx.link().callback(Msg::SelectElement)}
+                        />
+                    </div>
+                    <div class="properties">
+                        <PropertiesPanel
+                            selected_element={self.selected_id.as_ref().and_then(|id| self.container.find_element(id).cloned())}
+                            on_element_change={ctx.link().callback(Msg::UpdateElement)}
+                        />
+                    </div>
+                </div>
             </div>
-            <div class="main-content">
-                <InfiniteCanvas
-                    elements={(*elements).clone()}
-                    selected_id={(*selected_id).clone()}
-                    on_select={on_select.clone()}
-                    on_reparent={on_reparent.clone()}
-                    on_element_update={on_element_update.clone()}
-                />
-            </div>
-            <div class="properties-panel">
-                <PropertiesPanel
-                    elements={(*elements).clone()}
-                    selected_id={(*selected_id).clone()}
-                />
-            </div>
-        </div>
+        }
     }
 } 

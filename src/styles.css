@@ -1,0 +1,94 @@
+.app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #1e1e1e;
+}
+
+.toolbar {
+    padding: 8px;
+    background-color: #1e1e1e;
+    border-bottom: 1px solid #3d3d3d;
+    display: flex;
+    gap: 8px;
+}
+
+.tools {
+    position: relative;
+    display: inline-block;
+}
+
+.button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    transition: opacity 0.2s;
+}
+
+.button:hover {
+    opacity: 0.9;
+}
+
+.button.active {
+    background-color: #2979ff !important;
+}
+
+.elements-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    padding: 8px;
+    background-color: #2d2d2d;
+    border: 1px solid #3d3d3d;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 1000;
+}
+
+.elements-panel .button {
+    margin: 0;
+    width: 100%;
+    text-align: left;
+}
+
+.workspace {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+.canvas {
+    flex: 1;
+    background-color: #1e1e1e;
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 100px);
+    gap: 1px;
+}
+
+.canvas::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        linear-gradient(to right, #333 1px, transparent 1px),
+        linear-gradient(to bottom, #333 1px, transparent 1px);
+    background-size: 100px 100px;
+    pointer-events: none;
+}
+
+.properties {
+    width: 300px;
+    background-color: #2d2d2d;
+    border-left: 1px solid #3d3d3d;
+    overflow-y: auto;
+} 

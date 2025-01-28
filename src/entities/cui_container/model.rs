@@ -7,6 +7,12 @@ pub struct CuiContainer {
     pub elements: Vec<CuiElement>,
 }
 
+impl PartialEq for CuiContainer {
+    fn eq(&self, other: &Self) -> bool {
+        self.elements == other.elements
+    }
+}
+
 impl CuiContainer {
     pub fn new() -> Self {
         Self {

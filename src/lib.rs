@@ -23,7 +23,8 @@ pub mod widgets;
 // Re-export commonly used types
 pub use entities::cui_element::model::CuiElement;
 pub use entities::cui_container::model::CuiContainer;
-pub use shared::component::Component;
+pub use shared::lib::component::Component;
+pub use shared::lib::types::{Point, Size, Rect, Color};
 
 // Re-export features
 pub use features::canvas::Canvas;
