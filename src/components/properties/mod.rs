@@ -1,1 +1,2 @@
-pub mod panel; 
+pub mod panel;
+pub use panel::*; 

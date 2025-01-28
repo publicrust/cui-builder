@@ -2,7 +2,7 @@ use serde::{Serialize, Deserialize};
 use yew::prelude::*;
 use crate::core::component::Component;
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct ButtonComponent {
     pub text: String,
     pub font_size: f64,

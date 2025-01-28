@@ -39,10 +39,9 @@ pub fn toolbar(props: &ToolbarProps) -> Html {
                 element_type: ElementType::Panel,
                 components: vec![
                     Component::RectTransform(RectTransformComponent {
-                        anchor_min: (0.0, 0.0),
-                        anchor_max: (1.0, 1.0),
-                        offset_min: (0.1, 0.1),
-                        offset_max: (0.9, 0.9),
+                        position: (100.0, 100.0),
+                        size: (200.0, 200.0),
+                        rotation: 0.0,
                     }),
                     Component::Image(ImageComponent {
                         sprite: None,

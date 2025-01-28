@@ -1,0 +1,14 @@
+[package]
+name = "cui-properties"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+yew = { version = "0.21", features = ["csr"] }
+web-sys = { version = "0.3", features = ["HtmlInputElement"] }
+wasm-bindgen = "0.2"
+cui-element = { path = "../../entities/cui-element" }
+cui-container = { path = "../../entities/cui-container" } 

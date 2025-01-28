@@ -1,5 +1,4 @@
 use yew::prelude::*;
-use web_sys::{DragEvent, console};
 use crate::models::Element;
 
 #[derive(Properties, PartialEq)]

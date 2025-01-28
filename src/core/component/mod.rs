@@ -13,7 +13,7 @@ pub use unity_canvas::*;
 use serde::{Serialize, Deserialize};
 use yew::prelude::*;
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 #[serde(tag = "type")]
 pub enum Component {
     RectTransform(RectTransformComponent),

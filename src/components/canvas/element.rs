@@ -1,8 +1,6 @@
 use yew::prelude::*;
-use web_sys::{MouseEvent, Element as WebElement};
 use crate::models::{Element, ElementType};
-use crate::core::component::{Component, UnityCanvasTransform, RectTransformComponent};
-use wasm_bindgen::JsCast;
+use crate::core::component::{Component, UnityCanvasTransform};
 
 #[derive(Properties, PartialEq)]
 pub struct UnityElementProps {
@@ -119,7 +117,7 @@ pub fn unity_element(props: &UnityElementProps) -> Html {
             String::new()
         }
     } else {
-        // Для дочерних элементов используем anchor и offset с инвертированием по Y
+        // Для дочерних элементов используем position и size
         if let Some(transform) = props.element.components.iter()
             .find(|c| c.component_type() == "RectTransform")
             .and_then(|c| match c {
@@ -128,22 +126,16 @@ pub fn unity_element(props: &UnityElementProps) -> Html {
             }) {
             format!(
                 "position: absolute; \
-                left: {}%; \
-                right: {}%; \
-                bottom: {}%; \
-                top: {}%; \
-                margin-left: {}px; \
-                margin-right: {}px; \
-                margin-bottom: {}px; \
-                margin-top: {}px;",
-                transform.anchor_min.0 * 100.0,
-                (1.0 - transform.anchor_max.0) * 100.0,
-                transform.anchor_min.1 * 100.0, // Используем anchor_min.y для bottom
-                (1.0 - transform.anchor_max.1) * 100.0, // Используем anchor_max.y для top
-                transform.offset_min.0,
-                -transform.offset_max.0,
-                transform.offset_min.1, // Используем offset_min.y для margin-bottom
-                -transform.offset_max.1 // Используем offset_max.y для margin-top
+                left: {}px; \
+                top: {}px; \
+                width: {}px; \
+                height: {}px; \
+                transform: rotate({}deg);",
+                transform.position.0,
+                transform.position.1,
+                transform.size.0,
+                transform.size.1,
+                transform.rotation
             )
         } else {
             String::new()

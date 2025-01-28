@@ -1,8 +1,7 @@
-use web_sys::{MouseEvent, WheelEvent, TouchEvent, console};
+use web_sys::MouseEvent;
 use yew::prelude::*;
 use crate::models::Element;
 use crate::core::component::Component;
-use wasm_bindgen::JsCast;
 use super::element::UnityElement;
 
 #[derive(Properties, PartialEq)]

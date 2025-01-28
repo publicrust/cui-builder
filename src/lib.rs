@@ -12,10 +12,18 @@
 #![deny(clippy::use_debug)]
 #![deny(clippy::disallowed_types)]
 
+extern crate downcast_rs;
+
 pub mod models;
 pub mod core;
 pub mod components;
 pub mod styles;
+pub mod entities;
+pub mod features {
+    pub mod properties {
+        pub mod panel;
+    }
+}
 
 // Re-export commonly used types
 pub use models::{Element, ElementType};

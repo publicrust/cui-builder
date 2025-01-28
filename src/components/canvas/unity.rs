@@ -34,11 +34,12 @@ pub fn unity_canvas(props: &UnityCanvasProps) -> Html {
             _ => None,
         }) {
         format!(
-            "position: absolute; left: {}%; top: {}%; right: {}%; bottom: {}%;",
-            transform.anchor_min.0 * 100.0,
-            transform.anchor_min.1 * 100.0,
-            (1.0 - transform.anchor_max.0) * 100.0,
-            (1.0 - transform.anchor_max.1) * 100.0
+            "position: absolute; left: {}px; top: {}px; width: {}px; height: {}px; transform: rotate({}deg);",
+            transform.position.0,
+            transform.position.1,
+            transform.size.0,
+            transform.size.1,
+            transform.rotation
         )
     } else {
         String::new()
