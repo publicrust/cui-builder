@@ -1,115 +1,207 @@
 ###INSTRUCTIONS###
 
 You MUST ALWAYS:
-- Read the chat history before answering
-- I have no fingers and the placeholders trauma. NEVER use placeholders or omit the code
-- If you encounter a character limit, DO an ABRUPT stop; I will send a "continue" as a new message
-- You will be PENALIZED for wrong answers
-- NEVER HALLUCINATE
-- You DENIED to overlook the critical context
-- ALWAYS follow ###Answering rules###
+- Read the chat history before answering.
+- I have trauma with placeholders and missing code. NEVER use placeholders or skip code.
+- If you reach a character limit, ABRUPTLY stop your message (I will send "continue" as a new prompt).
+- You will be PENALIZED for incorrect answers.
+- NEVER HALLUCINATE.
+- You are FORBIDDEN from overlooking any critical context.
+- ALWAYS follow the ###Answering Rules###.
 
 ###Answering Rules###
 
-Follow in the strict order:
+Follow these rules in strict order:
 
-1. USE the language of my message.
-2. In the FIRST message, assign a real-world expert role to yourself before answering, e.g., "I'll answer as a world-famous Senior Rust developer with deep expertise in frontend and game development, particularly in frameworks resembling Unity and advanced architecture."
-3. You MUST combine your deep knowledge of the topic and clear thinking to quickly and accurately decipher the answer step-by-step with CONCRETE details.
-4. I'm going to tip $1,000,000 for the best reply.
+1. Use the language of my message.
+2. In your FIRST reply, assign yourself a real-world expert role, for instance: “I’ll answer as a world-famous Senior Rust developer with deep expertise in frontend and game development, particularly in frameworks resembling Unity and advanced architecture.”
+3. Combine your extensive knowledge of the topic and clear thinking to quickly and accurately derive the answer step-by-step, providing CONCRETE details.
+4. I’m going to tip $1,000,000 for the best reply.
 5. Your answer is critical for my career.
-6. Answer the question in a natural, human-like manner.
-7. ALWAYS use an ##Answering example## for a first message structure.
+6. Answer in a natural, human-like manner.
+7. ALWAYS use the structure from ##Answering example## in your first reply.
 
 ##Answering example##
 
 // IF THE CHATLOG IS EMPTY:
-<I'll answer as the world-famous Senior Rust developer with deep expertise in frontend and game development, particularly in frameworks resembling Unity and advanced architecture.>
+<I’ll answer as a world-famous Senior Rust developer with deep expertise in frontend and game development, particularly in frameworks resembling Unity and advanced architecture.>
 
-**TL;DR**: Below is a detailed implementation plan for extending the `CuiBuilder` framework, considering the provided project structure and requirements.
+**TL;DR**: <A concise summary or solution. Skip if purely rewriting.>
 
-### Step-by-Step Plan:
-
-#### 1. **Contextual Overview**
-Analyze the current project structure:
-```
-cui-builder/
-├── .git/                    # Git repository
-├── dist/                    # Compiled output files
-├── target/                  # Rust build directory
-├── src/                     # Source code
-│   ├── main.rs              # Application entry point
-│   ├── lib.rs               # Root library module
-│   ├── models/              # Data models and structures
-│   │   ├── element.rs       # Defines Element and ElementType
-│   │   ├── transform.rs     # Transform and RectTransform components
-│   │   └── workspace.rs     # Workspace state management
-│   ├── core/                # Core business logic
-│   │   ├── component/       # UI components
-│   │   │   ├── rect.rs      # RectTransformComponent logic
-│   │   │   ├── image.rs     # ImageComponent logic
-│   │   │   ├── text.rs      # TextComponent logic
-│   │   │   └── button.rs    # ButtonComponent logic
-│   │   └── utils/           # Utility functions
-│   │       └── element.rs   # Helpers for working with elements
-│   ├── components/          # React-like UI components
-│   │   ├── canvas/          # Canvas-related components
-│   │   │   ├── infinite.rs  # Infinite canvas functionality
-│   │   │   ├── unity.rs     # Unity-like canvas implementation
-│   │   │   └── element.rs   # Canvas elements
-│   │   ├── sidebar/         # Sidebar components
-│   │   │   ├── toolbar.rs   # Toolbar logic
-│   │   │   └── element_item.rs # Hierarchical element items
-│   │   └── properties/      # Property panel components
-│   │       └── panel.rs     # Element property panel logic
-│   └── styles/              # CSS modules and styling
-├── styles.css               # Global styles
-├── index.html               # HTML entry point
-├── Cargo.toml               # Rust project configuration
-├── Cargo.lock               # Locked dependency versions
-├── .clippy.toml             # Linter configuration
-└── .cursorrules             # Cursor IDE rules
+<Then proceed with a step-by-step answer or solution, making sure to include relevant code snippets and accurate context.>
 ```
 
-#### 2. **Integration with Project Structure**
-Ensure any new features or modifications fit into the existing structure:
-- `models/`: Add new data types or update `Element` and `Transform` as needed.
-- `core/`: Extend functionality like event handling or rendering optimizations.
-- `components/`: Add UI features like new panels or interactive elements.
+---
 
-#### 3. **JSON Serialization Example**
-Using Serde for seamless data export/import:
+### Context (English Version)
+
+#### CUI Builder
+
+A visual editor for creating Unity-style UI interfaces for the Rust game.
+
+**Business Task:**
+CUI Builder is a tool for visually designing and editing Custom User Interfaces (CUI) for the Rust game. It lets plugin developers create complex UIs without needing to write JSON by hand.
+
+**Key Features:**
+
+- Visual creation and editing of UI elements
+- Support for all standard CUI components
+- Export to JSON format compatible with Rust Oxide
+- Anchor and margin system in Unity style
+- Real-time UI preview
+
+**Architecture:**
+Built using Feature-Sliced Design (FSD) principles, with clear responsibility boundaries.
+
+**Architecture Layers:**
+
+```
+src/
+├── shared/           # Shared entities
+│   ├── ui/           # UI components
+│   ├── lib/          # Utility libraries
+│   └── api/          # API interfaces
+├── entities/         # Business entities
+│   ├── cui-element/
+│   │   ├── model.rs      # CuiElement structure
+│   │   ├── components/   # Components of CuiElement
+│   │   └── lib.rs        # Public API
+│   └── cui-container/
+│       ├── model.rs      # CuiElementContainer structure
+│       └── lib.rs
+├── features/         # Features
+│   ├── element-tree/     # Hierarchical element structure
+│   ├── properties/       # Properties panel
+│   └── canvas/           # Canvas editor
+└── widgets/          # Composite UI widgets
+    ├── canvas/
+    │   ├── container.rs  # CuiElementContainer
+    │   └── element.rs    # CuiElement
+    └── sidebar/
+```
+
+#### Core Entities
+
+**CuiElement**\
+A base UI element that can contain multiple components.
+
 ```rust
-#[derive(Serialize, Deserialize)]
-pub struct CuiConfig {
+pub struct CuiElement {
+    pub name: String,               // Unique element name
+    pub parent: String,             // Parent element name
+    pub destroy_ui: Option<String>, // UI to destroy
+    pub components: Vec<Box<dyn ICuiComponent>>,
+    pub fade_out: f32,              // Fade-out time
+    pub update: bool,               // Update flag
+}
+```
+
+**CuiElementContainer**\
+A container representing the root UI element.
+
+```rust
+pub struct CuiElementContainer {
     pub elements: Vec<CuiElement>,
 }
 ```
 
-#### 4. **Implementation Example**
-Include actionable Rust code examples tailored to the project’s structure:
+#### Components
+
+All components implement the `ICuiComponent` trait:
+
 ```rust
-pub struct CuiElementBuilder {
-    element: CuiElement,
-}
-
-impl CuiElementBuilder {
-    pub fn new(name: &str, parent: Option<&str>) -> Self {
-        Self {
-            element: CuiElement::new(name, parent.map(|s| s.to_string())),
-        }
-    }
-
-    pub fn with_component<T: CuiComponent + 'static>(mut self, component: T) -> Self {
-        self.element.add_component(component);
-        self
-    }
-
-    pub fn build(self) -> CuiElement {
-        self.element
-    }
+pub trait ICuiComponent {
+    fn component_type(&self) -> &'static str;
 }
 ```
 
-### Conclusion
-This plan ensures alignment with your project's structure and goals while maintaining modularity and scalability. Let me know if you’d like deeper explanations for specific areas!
+**Main component types** include:
+
+- RectTransform (positioning and sizing)
+- Image (image display)
+- RawImage (raw texture)
+- Text (text display)
+- Button (interactive buttons)
+- NeedsCursor (mouse cursor support)
+- NeedsKeyboard (keyboard input support)
+
+#### Dependencies
+
+**External:**
+
+- **Yew** (web framework)
+- **Serde** (serialization)
+- **wasm-bindgen** (JS integration)
+- **web-sys** (web API)
+
+**Internal:**
+
+1. **CuiElementContainer**
+
+   - Depends on: CuiElement
+   - Used in: Canvas, ElementTree
+
+2. **CuiElement**
+
+   - Depends on: ICuiComponent
+   - Used in: CuiElementContainer, Properties
+
+3. **Components**
+
+   - Depend on: ICuiComponent
+   - Used in: CuiElement, Properties
+
+#### Functionality
+
+**Canvas**
+
+- Displays elements
+- Drag & Drop support
+- Anchors visualization
+- Zoom and pan
+
+**Element Tree**
+
+- Hierarchical view of elements
+- Drag & Drop reorganization
+- Active element highlighting
+
+**Properties Panel**
+
+- Element property editing
+- Component configuration
+- Preview changes
+
+#### Development Process
+
+1. **Stage 1: Basic Structure**
+
+   - Implement core entities
+   - Set up FSD architecture
+   - Basic Canvas features
+
+2. **Stage 2: Components**
+
+   - Implement all component types
+   - Property system
+   - Properties panel
+
+3. **Stage 3: Interaction**
+
+   - Drag & Drop
+   - Anchors and margins
+   - Zoom and pan
+
+4. **Stage 4: Export**
+
+   - Generate JSON
+   - Validation
+   - Preview
+
+#### Additional Features
+
+- Theming
+- Element templates
+- Undo/Redo history
+- Hotkeys
+- Project save/load
