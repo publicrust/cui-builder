@@ -14,17 +14,20 @@
 
 extern crate downcast_rs;
 
-pub mod models;
-pub mod core;
-pub mod components;
-pub mod styles;
+pub mod shared;
 pub mod entities;
-pub mod features {
-    pub mod properties {
-        pub mod panel;
-    }
-}
+pub mod components;
+pub mod features;
+pub mod widgets;
 
 // Re-export commonly used types
-pub use models::{Element, ElementType};
-pub use core::component::Component; 
+pub use entities::cui_element::model::CuiElement;
+pub use entities::cui_container::model::CuiContainer;
+pub use shared::component::Component;
+
+// Re-export features
+pub use features::canvas::Canvas;
+pub use features::properties::PropertiesPanel;
+pub use features::element_tree::ElementTree;
+
+pub use entities::element::Element; 

@@ -1,22 +1,17 @@
-#![deny(clippy::disallowed_types)]
+mod shared;
+mod entities;
+mod components;
+mod features;
+mod widgets;
 
 use yew::prelude::*;
-use std::ops::Deref;
-use cui_builder::{
-    Element,
-    components::{
-        canvas::infinite::InfiniteCanvas,
-        sidebar::{element_item::ElementItem, toolbar::Toolbar},
-        properties::panel::PropertiesPanel,
-    },
+use crate::entities::element::Element;
+use crate::components::{
+    canvas::infinite::InfiniteCanvas,
+    sidebar::{element_item::ElementItem, toolbar::Toolbar},
+    properties::panel::PropertiesPanel,
 };
-use cui_builder::core::component::{
-    Component,
-    RectTransformComponent,
-    ImageComponent,
-    TextComponent
-};
-use cui_builder::entities::cui_element::components::interface::CuiComponent;
+use crate::shared::lib::component::Component;
 
 #[function_component(App)]
 pub fn app() -> Html {
@@ -78,7 +73,7 @@ pub fn app() -> Html {
         let selected_component = selected_component.clone();
         Callback::from(move |(id, c): (String, Component)| {
             let mut new_elements = (*elements).clone();
-            if let Some(element) = new_elements.iter_mut().find(|e| e.id == id) {
+            if let Some(element) = find_element_by_id_mut(&mut new_elements, &id) {
                 if let Some(old) = element.components.iter_mut().find(|x| 
                     x.component_type() == c.component_type()
                 ) {
@@ -137,7 +132,6 @@ fn find_element_by_id<'a>(elements: &'a [Element], id: &str) -> Option<&'a Eleme
         if element.id == id {
             return Some(element);
         }
-        // Ищем в дочерних элементах Canvas
         if let Some(found) = find_element_by_id(&element.children, id) {
             return Some(found);
         }

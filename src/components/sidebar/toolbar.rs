@@ -1,64 +1,56 @@
 use yew::prelude::*;
-use crate::models::{Element, ElementType};
-use crate::core::component::{Component, RectTransformComponent, ImageComponent, UnityCanvasTransform};
+use crate::entities::element::Element;
+use crate::shared::lib::{utils::generate_id, component::Component, types::Color};
+use crate::shared::ui::Button;
 
-#[derive(Properties, PartialEq)]
+#[derive(Properties, Clone, PartialEq)]
 pub struct ToolbarProps {
     pub on_add_element: Callback<Element>,
 }
 
 #[function_component(Toolbar)]
 pub fn toolbar(props: &ToolbarProps) -> Html {
-    let on_add_unity_canvas = {
-        let on_add_element = props.on_add_element.clone();
+    let ToolbarProps { on_add_element } = props.clone();
+
+    let add_rect = {
+        let on_add_element = on_add_element.clone();
         Callback::from(move |_| {
-            let element = Element {
-                id: uuid::Uuid::new_v4().to_string(),
-                name: "Unity Canvas".to_string(),
-                element_type: ElementType::UnityCanvas,
-                components: vec![
-                    Component::UnityCanvasTransform(UnityCanvasTransform {
-                        x: 0.0,
-                        y: 0.0,
-                        width: 800.0,
-                        height: 600.0,
-                    }),
-                ],
-                children: vec![],
-            };
+            let id = generate_id();
+            let mut element = Element::new(id.clone(), format!("Rectangle {}", id));
+            element.add_component(Component::RectTransform(Default::default()));
             on_add_element.emit(element);
         })
     };
 
-    let on_add_panel = {
-        let on_add_element = props.on_add_element.clone();
+    let add_text = {
+        let on_add_element = on_add_element.clone();
         Callback::from(move |_| {
-            let element = Element {
-                id: uuid::Uuid::new_v4().to_string(),
-                name: "Panel".to_string(),
-                element_type: ElementType::Panel,
-                components: vec![
-                    Component::RectTransform(RectTransformComponent {
-                        position: (100.0, 100.0),
-                        size: (200.0, 200.0),
-                        rotation: 0.0,
-                    }),
-                    Component::Image(ImageComponent {
-                        sprite: None,
-                        color: Some("1.0,1.0,1.0,1.0".to_string()),
-                        material: None,
-                    }),
-                ],
-                children: vec![],
-            };
+            let id = generate_id();
+            let mut element = Element::new(id.clone(), format!("Text {}", id));
+            element.add_component(Component::RectTransform(Default::default()));
+            element.add_component(Component::Text(Default::default()));
             on_add_element.emit(element);
         })
     };
+
+    let add_image = {
+        let on_add_element = on_add_element;
+        Callback::from(move |_| {
+            let id = generate_id();
+            let mut element = Element::new(id.clone(), format!("Image {}", id));
+            element.add_component(Component::RectTransform(Default::default()));
+            element.add_component(Component::Image(Default::default()));
+            on_add_element.emit(element);
+        })
+    };
+
+    let button_color = Some(Color::new(64, 158, 255, 255)); // Голубой цвет для кнопок
 
     html! {
         <div class="toolbar">
-            <button onclick={on_add_unity_canvas}>{"Add Unity Canvas"}</button>
-            <button onclick={on_add_panel}>{"Add Panel"}</button>
+            <Button text="Add Rectangle" onclick={add_rect} color={button_color.clone()} />
+            <Button text="Add Text" onclick={add_text} color={button_color.clone()} />
+            <Button text="Add Image" onclick={add_image} color={button_color} />
         </div>
     }
 } 

@@ -1,16 +1,23 @@
 use web_sys::MouseEvent;
 use yew::prelude::*;
-use crate::models::Element;
-use crate::core::component::Component;
+use crate::entities::element::Element;
+use crate::shared::lib::component::Component;
 use super::element::UnityElement;
 
-#[derive(Properties, PartialEq)]
+#[derive(Properties, Clone)]
 pub struct InfiniteCanvasProps {
     pub elements: Vec<Element>,
     pub selected_id: Option<String>,
     pub on_select: Callback<String>,
     pub on_reparent: Callback<(String, Option<String>)>,
     pub on_update_component: Callback<(String, Component)>,
+}
+
+impl PartialEq for InfiniteCanvasProps {
+    fn eq(&self, other: &Self) -> bool {
+        self.elements == other.elements &&
+        self.selected_id == other.selected_id
+    }
 }
 
 #[derive(Clone, PartialEq)]
@@ -32,6 +39,14 @@ impl Default for WorkspaceState {
 
 #[function_component(InfiniteCanvas)]
 pub fn infinite_canvas(props: &InfiniteCanvasProps) -> Html {
+    let InfiniteCanvasProps {
+        elements,
+        selected_id,
+        on_select,
+        on_reparent,
+        on_update_component,
+    } = props.clone();
+
     let workspace_state = use_state(WorkspaceState::default);
     let is_panning = use_state(|| false);
     let last_mouse_pos = use_state(|| None::<(f64, f64)>);
@@ -150,14 +165,14 @@ pub fn infinite_canvas(props: &InfiniteCanvasProps) -> Html {
                 }
             </div>
             <div class="workspace" style={workspace_style}>
-                {for props.elements.iter().map(|element| {
+                {for elements.iter().map(|element| {
                     html! {
                         <UnityElement
                             element={element.clone()}
-                            selected_id={props.selected_id.clone()}
-                            on_select={props.on_select.clone()}
-                            on_reparent={props.on_reparent.clone()}
-                            on_update_component={props.on_update_component.clone()}
+                            selected_id={selected_id.clone()}
+                            on_select={on_select.clone()}
+                            on_reparent={on_reparent.clone()}
+                            on_update_component={on_update_component.clone()}
                         />
                     }
                 })}

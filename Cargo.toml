@@ -14,11 +14,16 @@ web-sys = { version = "0.3", features = [
     "TouchEvent",
     "TouchList",
     "Touch",
-    "console"
+    "console",
+    "HtmlElement",
+    "Element",
+    "DomRect",
+    "Window",
+    "Document"
 ] }
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
-gloo-timers = { version = "0.3", features = ["futures"] }
+gloo = { version = "0.10", features = ["timers", "net"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 uuid = { version = "1.0", features = ["v4", "js"] }
@@ -27,3 +32,13 @@ log = "0.4"
 console_log = "1.0"
 console_error_panic_hook = "0.1"
 downcast-rs = "1.2"
+futures = "0.3"
+url = "2.4"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+gloo-net = { version = "0.4", features = ["http", "websocket"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tokio = { version = "1.0", features = ["rt", "macros"] }
+reqwest = { version = "0.11", features = ["json"] }
+tokio-tungstenite = "0.20"
