@@ -2,7 +2,7 @@
 
 Визуальный редактор для создания пользовательских интерфейсов в стиле Unity UI для игры Rust.
 
-## Бизнес-задача
+## Описание проекта
 
 CUI Builder - это инструмент для визуального создания и редактирования пользовательских интерфейсов в формате CUI (Custom User Interface) для игры Rust. Он позволяет разработчикам плагинов создавать сложные интерфейсы без необходимости писать JSON вручную.
 
@@ -14,147 +14,134 @@ CUI Builder - это инструмент для визуального созд
 - Система якорей и отступов в стиле Unity
 - Предпросмотр интерфейса в реальном времени
 
-## Архитектура
-
-Проект построен по принципам Feature-Sliced Design (FSD) с четким разделением ответственности.
-
-### Слои архитектуры
+## Структура проекта
 
 ```
 src/
-├── shared/           # Переиспользуемые сущности
-│   ├── ui/          # UI компоненты
-│   ├── lib/         # Библиотеки
-│   └── api/         # API интерфейсы
-├── entities/         # Бизнес-сущности
-│   ├── cui-element/
-│   │   ├── model.rs      # Структура CuiElement
-│   │   ├── components/   # Компоненты CuiElement
-│   │   └── lib.rs        # Публичное API
-│   └── cui-container/
-│       ├── model.rs      # Структура CuiElementContainer
-│       └── lib.rs
-├── features/         # Функциональность
-│   ├── element-tree/     # Дерево элементов
-│   ├── properties/      # Панель свойств
-│   └── canvas/          # Канвас редактор
-└── widgets/          # Композитные компоненты
-    ├── canvas/
-    │   ├── container.rs  # CuiElementContainer
-    │   └── element.rs    # CuiElement
-    └── sidebar/
+├── oxide_interface/           # Интерфейс для работы с CUI
+│   ├── components/           # UI компоненты
+│   │   ├── CuiButtonComponent.rs    # Компонент кнопки
+│   │   ├── CuiImageComponent.rs     # Компонент изображения
+│   │   ├── CuiRawImageComponent.rs  # Компонент raw-изображения
+│   │   ├── CuiTextComponent.rs      # Текстовый компонент
+│   │   ├── CuiRectTransformComponent.rs  # Компонент трансформации
+│   │   ├── CuiNeedsCursorComponent.rs    # Компонент курсора
+│   │   └── CuiNeedsKeyboardComponent.rs  # Компонент клавиатуры
+│   ├── elements/            # UI элементы
+│   │   ├── CuiElement.rs    # Базовый элемент
+│   │   ├── CuiPanel.rs      # Панель
+│   │   ├── CuiButton.rs     # Кнопка
+│   │   └── CuiLabel.rs      # Текстовая метка
+│   ├── CuiElementContainer.rs  # Контейнер элементов
+│   └── CuiHelper.rs         # Вспомогательные функции
 ```
 
-### Ключевые сущности
+## Основные сущности
 
-#### CuiElement
-Базовый элемент интерфейса, который может содержать различные компоненты.
-
+### CuiElement
+Базовый элемент интерфейса, содержащий общие свойства:
 ```rust
 pub struct CuiElement {
-    pub name: String,          // Уникальное имя элемента
-    pub parent: String,        // Имя родительского элемента
-    pub destroy_ui: Option<String>,  // UI для уничтожения
-    pub components: Vec<Box<dyn ICuiComponent>>,  // Компоненты
-    pub fade_out: f32,         // Время затухания
-    pub update: bool,          // Флаг обновления
+    pub name: String,
+    pub parent: String,
+    pub destroy_ui: Option<String>,
+    pub components: Vec<Box<dyn ICuiComponent>>,
+    pub fade_out: f32,
 }
 ```
 
-#### CuiElementContainer
-Контейнер элементов, представляющий собой корневой элемент UI.
+### Элементы интерфейса
 
+#### CuiPanel
+Базовый контейнер, который может содержать изображение или raw-изображение:
 ```rust
-pub struct CuiElementContainer {
-    pub elements: Vec<CuiElement>,  // Список элементов
+pub struct CuiPanel {
+    #[serde(flatten)]
+    pub base: CuiElement,
+    pub image: Option<CuiImageComponent>,
+    pub raw_image: Option<CuiRawImageComponent>,
+    pub rect_transform: CuiRectTransformComponent,
+}
+```
+
+#### CuiButton
+Кнопка с текстом:
+```rust
+pub struct CuiButton {
+    #[serde(flatten)]
+    pub base: CuiElement,
+    pub button: CuiButtonComponent,
+    pub rect_transform: CuiRectTransformComponent,
+    pub text: CuiTextComponent,
+}
+```
+
+#### CuiLabel
+Текстовая метка:
+```rust
+pub struct CuiLabel {
+    #[serde(flatten)]
+    pub base: CuiElement,
+    pub text: CuiTextComponent,
+    pub rect_transform: CuiRectTransformComponent,
 }
 ```
 
 ### Компоненты
 
-Все компоненты реализуют интерфейс `ICuiComponent`:
-
+Все компоненты реализуют трейт ICuiComponent:
 ```rust
-pub trait ICuiComponent {
+pub trait ICuiComponent: std::fmt::Debug + Send + Sync {
     fn component_type(&self) -> &'static str;
 }
 ```
 
-Основные типы компонентов:
-- RectTransform (позиционирование и размеры)
-- Image (изображения)
-- RawImage (необработанные изображения)
-- Text (текст)
-- Button (кнопки)
-- NeedsCursor (поддержка курсора)
-- NeedsKeyboard (поддержка клавиатуры)
+Основные компоненты:
+- CuiButtonComponent - компонент кнопки
+- CuiImageComponent - компонент изображения
+- CuiRawImageComponent - компонент raw-изображения
+- CuiTextComponent - текстовый компонент
+- CuiRectTransformComponent - компонент для позиционирования
+- CuiNeedsCursorComponent - компонент поддержки курсора
+- CuiNeedsKeyboardComponent - компонент поддержки клавиатуры
 
-### Зависимости
+## Использование
 
-#### Внешние зависимости
-- Yew (веб-фреймворк)
-- Serde (сериализация)
-- wasm-bindgen (интеграция с JavaScript)
-- web-sys (веб API)
+### Создание элементов
 
-#### Внутренние зависимости
+```rust
+// Создание панели
+let panel = CuiPanel::new("MyPanel".to_string(), "Hud".to_string());
 
-1. **CuiElementContainer**
-   - Зависит от: CuiElement
-   - Используется в: Canvas, ElementTree
+// Создание кнопки
+let button = CuiButton::new("MyButton".to_string(), "MyPanel".to_string());
 
-2. **CuiElement**
-   - Зависит от: ICuiComponent
-   - Используется в: CuiElementContainer, Properties
+// Создание текстовой метки
+let label = CuiLabel::new("MyLabel".to_string(), "MyPanel".to_string());
+```
 
-3. **Компоненты**
-   - Зависят от: ICuiComponent
-   - Используются в: CuiElement, Properties
+### Работа с компонентами
 
-## Функциональность
+```rust
+// Добавление изображения к панели
+let image = CuiImageComponent::default();
+panel.set_image(image);
 
-### Canvas
-- Отображение элементов
-- Поддержка перетаскивания
-- Визуализация якорей
-- Масштабирование и панорамирование
+// Настройка текста кнопки
+button.text.text = Some("Click me!".to_string());
+```
 
-### Element Tree
-- Иерархическое отображение элементов
-- Drag & Drop для реорганизации
-- Выделение активного элемента
+### Экспорт в JSON
 
-### Properties Panel
-- Редактирование свойств элементов
-- Настройка компонентов
-- Предпросмотр изменений
+```rust
+// Создание контейнера
+let mut container = CuiElementContainer::new();
 
-## Процесс разработки
+// Добавление элементов
+container.add_panel(panel);
+container.add_button(button);
+container.add_label(label);
 
-1. **Этап 1: Базовая структура**
-   - Реализация базовых сущностей
-   - Настройка FSD архитектуры
-   - Базовая функциональность Canvas
-
-2. **Этап 2: Компоненты**
-   - Реализация всех типов компонентов
-   - Система свойств
-   - Панель Properties
-
-3. **Этап 3: Взаимодействие**
-   - Drag & Drop
-   - Якоря и отступы
-   - Масштабирование и панорамирование
-
-4. **Этап 4: Экспорт**
-   - Генерация JSON
-   - Валидация
-   - Предпросмотр
-
-## Дополнительные возможности
-
-- Темы оформления
-- Шаблоны элементов
-- История изменений (Undo/Redo)
-- Горячие клавиши
-- Сохранение/загрузка проектов 
+// Экспорт в JSON
+let json = CuiHelper::to_json(&container, true);
+```
