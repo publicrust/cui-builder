@@ -1,7 +1,8 @@
 use yew::prelude::*;
-use web_sys::{MouseEvent, Element as WebElement};
+use web_sys::MouseEvent;
 use crate::models::{Element, ElementType};
-use crate::core::component::{Component, UnityCanvasTransform, RectTransformComponent};
+use crate::core::component::{Component, UnityCanvasTransform};
+use crate::oxide_interface::components::cui_rect_transform_component::CuiRectTransformComponent;
 use wasm_bindgen::JsCast;
 
 #[derive(Properties, PartialEq)]
@@ -136,14 +137,14 @@ pub fn unity_element(props: &UnityElementProps) -> Html {
                 margin-right: {}px; \
                 margin-bottom: {}px; \
                 margin-top: {}px;",
-                transform.anchor_min.0 * 100.0,
-                (1.0 - transform.anchor_max.0) * 100.0,
-                transform.anchor_min.1 * 100.0, // Используем anchor_min.y для bottom
-                (1.0 - transform.anchor_max.1) * 100.0, // Используем anchor_max.y для top
-                transform.offset_min.0,
-                -transform.offset_max.0,
-                transform.offset_min.1, // Используем offset_min.y для margin-bottom
-                -transform.offset_max.1 // Используем offset_max.y для margin-top
+                transform.base.anchormin.split_whitespace().next().unwrap_or("0"),
+                (100.0 - transform.base.anchormax.split_whitespace().next().unwrap_or("100").parse::<f64>().unwrap_or(100.0)),
+                transform.base.anchormin.split_whitespace().nth(1).unwrap_or("0"),
+                (100.0 - transform.base.anchormax.split_whitespace().nth(1).unwrap_or("100").parse::<f64>().unwrap_or(100.0)),
+                transform.base.offsetmin.split_whitespace().next().unwrap_or("0"),
+                transform.base.offsetmax.split_whitespace().next().unwrap_or("0"),
+                transform.base.offsetmin.split_whitespace().nth(1).unwrap_or("0"),
+                transform.base.offsetmax.split_whitespace().nth(1).unwrap_or("0")
             )
         } else {
             String::new()

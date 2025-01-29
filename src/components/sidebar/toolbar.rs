@@ -1,6 +1,10 @@
 use yew::prelude::*;
 use crate::models::element::{Element, ElementType};
-use crate::core::component::{Component, RectTransformComponent, ImageComponent, UnityCanvasTransform};
+use crate::core::component::{Component, UnityCanvasTransform};
+use crate::oxide_interface::components::{
+    cui_rect_transform_component::{CuiRectTransformComponent, CuiRectTransform},
+    cui_image_component::CuiImageComponent,
+};
 
 #[derive(Properties, PartialEq)]
 pub struct ToolbarProps {
@@ -38,16 +42,23 @@ pub fn toolbar(props: &ToolbarProps) -> Html {
                 name: "Panel".to_string(),
                 element_type: ElementType::Panel,
                 components: vec![
-                    Component::RectTransform(RectTransformComponent {
-                        anchor_min: (0.0, 0.0),
-                        anchor_max: (1.0, 1.0),
-                        offset_min: (0.1, 0.1),
-                        offset_max: (0.9, 0.9),
+                    Component::RectTransform(CuiRectTransformComponent {
+                        base: CuiRectTransform {
+                            anchormin: "0 0".to_string(),
+                            anchormax: "1 1".to_string(),
+                            offsetmin: "10 10".to_string(),
+                            offsetmax: "90 90".to_string(),
+                        }
                     }),
-                    Component::Image(ImageComponent {
+                    Component::Image(CuiImageComponent {
+                        color: Some("1 1 1 1".to_string()),
                         sprite: None,
-                        color: Some("1.0,1.0,1.0,1.0".to_string()),
                         material: None,
+                        image_type: None,
+                        png: None,
+                        fade_in: None,
+                        itemid: None,
+                        skinid: None,
                     }),
                 ],
                 children: vec![],

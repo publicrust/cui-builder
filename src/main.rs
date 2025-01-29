@@ -2,13 +2,16 @@
 
 use yew::prelude::*;
 use cui_builder::{
-    Element,
     core::component::Component,
     components::{
         canvas::infinite::InfiniteCanvas,
-        sidebar::{element_item::ElementItem, toolbar::Toolbar},
+        sidebar::{
+            toolbar::Toolbar,
+            element_item::ElementItem,
+        },
         properties::panel::PropertiesPanel,
     },
+    models::element::Element,
 };
 use web_sys::console;
 

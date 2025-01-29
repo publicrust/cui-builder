@@ -35,10 +35,10 @@ pub fn unity_canvas(props: &UnityCanvasProps) -> Html {
         }) {
         format!(
             "position: absolute; left: {}%; top: {}%; right: {}%; bottom: {}%;",
-            transform.anchor_min.0 * 100.0,
-            transform.anchor_min.1 * 100.0,
-            (1.0 - transform.anchor_max.0) * 100.0,
-            (1.0 - transform.anchor_max.1) * 100.0
+            transform.base.anchormin.split_whitespace().next().unwrap_or("0").parse::<f64>().unwrap_or(0.0) * 100.0,
+            transform.base.anchormin.split_whitespace().nth(1).unwrap_or("0").parse::<f64>().unwrap_or(0.0) * 100.0,
+            (1.0 - transform.base.anchormax.split_whitespace().next().unwrap_or("100").parse::<f64>().unwrap_or(100.0) / 100.0) * 100.0,
+            (1.0 - transform.base.anchormax.split_whitespace().nth(1).unwrap_or("100").parse::<f64>().unwrap_or(100.0) / 100.0) * 100.0
         )
     } else {
         String::new()
