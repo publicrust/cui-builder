@@ -1,11 +1,11 @@
 use serde::Serialize;
 use crate::oxide_interface::components::{
-    CuiImageComponent,
-    CuiRawImageComponent,
-    CuiRectTransformComponent,
+    cui_image_component::CuiImageComponent,
+    cui_raw_image_component::CuiRawImageComponent,
+    cui_rect_transform_component::CuiRectTransformComponent,
     ICuiComponent,
 };
-use super::CuiElement;
+use super::{cui_element::CuiElement, ICuiElement};
 
 #[derive(Serialize)]
 pub struct CuiPanel {

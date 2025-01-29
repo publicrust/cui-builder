@@ -1,11 +1,11 @@
 use serde::Serialize;
 use crate::oxide_interface::components::{
-    CuiButtonComponent,
-    CuiRectTransformComponent,
-    CuiTextComponent,
+    cui_button_component::CuiButtonComponent,
+    cui_rect_transform_component::CuiRectTransformComponent,
+    cui_text_component::CuiTextComponent,
     ICuiComponent,
 };
-use super::CuiElement;
+use super::{cui_element::CuiElement, ICuiElement};
 
 #[derive(Serialize)]
 pub struct CuiButton {
@@ -22,10 +22,10 @@ impl CuiButton {
         let rect_transform = CuiRectTransformComponent::default();
         let text = CuiTextComponent::default();
 
-        let components = vec![
-            Box::new(button.clone()),
-            Box::new(rect_transform.clone()),
-            Box::new(text.clone()),
+        let components: Vec<Box<dyn ICuiComponent>> = vec![
+            Box::new(button.clone()) as Box<dyn ICuiComponent>,
+            Box::new(rect_transform.clone()) as Box<dyn ICuiComponent>,
+            Box::new(text.clone()) as Box<dyn ICuiComponent>,
         ];
 
         Self {
@@ -37,7 +37,7 @@ impl CuiButton {
     }
 }
 
-impl CuiElement for CuiButton {
+impl ICuiElement for CuiButton {
     fn get_name(&self) -> &str {
         &self.base.name
     }
@@ -50,8 +50,8 @@ impl CuiElement for CuiButton {
         self.base.fade_out
     }
 
-    fn get_components(&self) -> Vec<Box<dyn ICuiComponent>> {
-        self.base.components.clone()
+    fn get_components(&self) -> &[Box<dyn ICuiComponent>] {
+        &self.base.components
     }
 
     fn get_destroy_ui(&self) -> Option<&str> {

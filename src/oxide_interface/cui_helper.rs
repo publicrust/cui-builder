@@ -1,6 +1,6 @@
 use serde_json::{to_string, to_string_pretty, from_str, Result};
-use super::container::CuiElementContainer;
-use super::elements::CuiElement;
+use crate::oxide_interface::CuiElementContainer;
+use crate::oxide_interface::elements::cui_element::CuiElement;
 
 // Имитируем часть функционала Oxide, как в C# 
 // (AddUi, DestroyUi, GetGuid, и т.д.)
@@ -20,7 +20,7 @@ impl CuiHelper {
     }
 
     pub fn generate_guid() -> String {
-        uuid::Uuid::new_v4().to_simple().to_string()
+        uuid::Uuid::new_v4().simple().to_string()
     }
 
     // Заглушка для AddUi – в реальном плагине вы бы делали RPC вызов

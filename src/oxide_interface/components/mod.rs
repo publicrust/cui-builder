@@ -1,12 +1,10 @@
-pub mod button;
-pub mod label;
-pub mod panel;
-pub mod image;
-pub mod raw_image;
-pub mod rect_transform;
-pub mod text;
-pub mod needs_cursor;
-pub mod needs_keyboard;
+pub mod cui_button_component;
+pub mod cui_image_component;
+pub mod cui_raw_image_component;
+pub mod cui_rect_transform_component;
+pub mod cui_text_component;
+pub mod cui_needs_cursor_component;
+pub mod cui_needs_keyboard_component;
 
 // -------------------------------------------------------------------
 // Общий трейт для всех компонентов

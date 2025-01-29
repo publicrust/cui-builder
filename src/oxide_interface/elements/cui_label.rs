@@ -1,10 +1,10 @@
 use serde::Serialize;
 use crate::oxide_interface::components::{
-    CuiTextComponent,
-    CuiRectTransformComponent,
+    cui_text_component::CuiTextComponent,
+    cui_rect_transform_component::CuiRectTransformComponent,
     ICuiComponent,
 };
-use super::CuiElement;
+use super::{cui_element::CuiElement, ICuiElement};
 
 // CuiLabel аналогичен структуре C# - содержит text + RectTransform + fade_out
 #[derive(Serialize)]
@@ -20,9 +20,9 @@ impl CuiLabel {
         let text = CuiTextComponent::default();
         let rect_transform = CuiRectTransformComponent::default();
 
-        let components = vec![
-            Box::new(text.clone()),
-            Box::new(rect_transform.clone()),
+        let components: Vec<Box<dyn ICuiComponent>> = vec![
+            Box::new(text.clone()) as Box<dyn ICuiComponent>,
+            Box::new(rect_transform.clone()) as Box<dyn ICuiComponent>,
         ];
 
         Self {
@@ -33,7 +33,7 @@ impl CuiLabel {
     }
 }
 
-impl CuiElement for CuiLabel {
+impl ICuiElement for CuiLabel {
     fn get_name(&self) -> &str {
         &self.base.name
     }
@@ -46,8 +46,8 @@ impl CuiElement for CuiLabel {
         self.base.fade_out
     }
 
-    fn get_components(&self) -> Vec<Box<dyn ICuiComponent>> {
-        self.base.components.clone()
+    fn get_components(&self) -> &[Box<dyn ICuiComponent>] {
+        &self.base.components
     }
 
     fn get_destroy_ui(&self) -> Option<&str> {
@@ -57,6 +57,6 @@ impl CuiElement for CuiLabel {
 
 impl Default for CuiLabel {
     fn default() -> Self {
-        Self::new()
+        Self::new("Default".to_string(), "Hud".to_string())
     }
 } 

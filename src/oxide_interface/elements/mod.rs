@@ -1,9 +1,7 @@
-mod CuiElement;
-mod CuiPanel;
-mod CuiButton;
-mod CuiLabel;
+pub mod cui_element;
+pub mod cui_panel;
+pub mod cui_button;
+pub mod cui_label;
+pub mod i_cui_element;
 
-pub use CuiElement::CuiElement;
-pub use CuiPanel::CuiPanel;
-pub use CuiButton::CuiButton;
-pub use CuiLabel::CuiLabel; 
+pub use i_cui_element::ICuiElement; 

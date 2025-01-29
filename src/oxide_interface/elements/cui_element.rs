@@ -1,7 +1,8 @@
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use crate::oxide_interface::components::ICuiComponent;
+use super::ICuiElement;
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct CuiElement {
     pub name: String,
     pub parent: String,
@@ -25,5 +26,27 @@ impl CuiElement {
     pub fn with_destroy_ui(mut self, destroy_ui: String) -> Self {
         self.destroy_ui = Some(destroy_ui);
         self
+    }
+}
+
+impl ICuiElement for CuiElement {
+    fn get_name(&self) -> &str {
+        &self.name
+    }
+
+    fn get_parent(&self) -> &str {
+        &self.parent
+    }
+
+    fn get_fade_out(&self) -> f32 {
+        self.fade_out
+    }
+
+    fn get_components(&self) -> &[Box<dyn ICuiComponent>] {
+        &self.components
+    }
+
+    fn get_destroy_ui(&self) -> Option<&str> {
+        self.destroy_ui.as_deref()
     }
 } 
