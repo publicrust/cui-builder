@@ -1,8 +1,6 @@
 use yew::prelude::*;
-use web_sys::{DragEvent, console, HtmlElement, MouseEvent, Node};
-use crate::core::utils::element::{Element, ElementType};
-use crate::{CuiPanel, CuiButton, CuiLabel};
-use crate::CuiElement;
+use web_sys::DragEvent;
+use crate::models::element::{Element, ElementType};
 
 #[derive(Properties, PartialEq)]
 pub struct ElementItemProps {

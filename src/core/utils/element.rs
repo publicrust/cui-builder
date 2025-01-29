@@ -1,18 +1,5 @@
+use crate::models::element::{Element, ElementType};
 use crate::{CuiElement, CuiPanel, CuiButton, CuiLabel};
-
-#[derive(Clone, PartialEq)]
-pub struct Element {
-    pub id: String,
-    pub element_type: ElementType,
-    pub children: Vec<Element>,
-}
-
-#[derive(Clone, PartialEq, Debug)]
-pub enum ElementType {
-    Panel(CuiPanel),
-    Button(CuiButton),
-    Label(CuiLabel),
-}
 
 impl Element {
     pub fn from_cui_element(_element: &CuiElement) -> Self {

@@ -1,26 +1,89 @@
-mod rect;
-mod image;
-mod text;
-mod button;
 mod unity_canvas;
+mod properties;
 
-pub use rect::*;
-pub use image::*;
-pub use text::*;
-pub use button::*;
 pub use unity_canvas::*;
+pub use properties::*;
+pub use crate::oxide_interface::components::{
+    cui_rect_transform_component::CuiRectTransformComponent,
+    cui_image_component::CuiImageComponent,
+    cui_text_component::CuiTextComponent,
+    cui_button_component::CuiButtonComponent,
+    ICuiComponent,
+    component_type::ComponentType,
+};
 
 use serde::{Serialize, Deserialize};
 use yew::prelude::*;
 
+// Трейт для рендеринга свойств компонента
+pub trait RenderProperties {
+    fn render_properties_with_callback(&self, on_update: Callback<Component>) -> Html;
+}
+
+// Реализации для каждого компонента
+impl RenderProperties for CuiRectTransformComponent {
+    fn render_properties_with_callback(&self, on_update: Callback<Component>) -> Html {
+        html! {
+            <div class="component-properties">
+                <h4>{"RectTransform"}</h4>
+                // TODO: Добавить редактирование свойств
+            </div>
+        }
+    }
+}
+
+impl RenderProperties for UnityCanvasTransform {
+    fn render_properties_with_callback(&self, on_update: Callback<Component>) -> Html {
+        html! {
+            <div class="component-properties">
+                <h4>{"UnityCanvasTransform"}</h4>
+                // TODO: Добавить редактирование свойств
+            </div>
+        }
+    }
+}
+
+impl RenderProperties for CuiImageComponent {
+    fn render_properties_with_callback(&self, on_update: Callback<Component>) -> Html {
+        html! {
+            <div class="component-properties">
+                <h4>{"Image"}</h4>
+                // TODO: Добавить редактирование свойств
+            </div>
+        }
+    }
+}
+
+impl RenderProperties for CuiTextComponent {
+    fn render_properties_with_callback(&self, on_update: Callback<Component>) -> Html {
+        html! {
+            <div class="component-properties">
+                <h4>{"Text"}</h4>
+                // TODO: Добавить редактирование свойств
+            </div>
+        }
+    }
+}
+
+impl RenderProperties for CuiButtonComponent {
+    fn render_properties_with_callback(&self, on_update: Callback<Component>) -> Html {
+        html! {
+            <div class="component-properties">
+                <h4>{"Button"}</h4>
+                // TODO: Добавить редактирование свойств
+            </div>
+        }
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum Component {
-    RectTransform(RectTransformComponent),
+    RectTransform(CuiRectTransformComponent),
     UnityCanvasTransform(UnityCanvasTransform),
-    Image(ImageComponent),
-    Text(TextComponent),
-    Button(ButtonComponent),
+    Image(CuiImageComponent),
+    Text(CuiTextComponent),
+    Button(CuiButtonComponent),
 }
 
 impl Component {
