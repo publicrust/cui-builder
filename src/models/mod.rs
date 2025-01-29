@@ -1,6 +1,6 @@
-mod element;
-mod transform;
-mod workspace;
+pub mod element;
+pub mod transform;
+pub mod workspace;
 
 pub use element::*;
 pub use transform::*;

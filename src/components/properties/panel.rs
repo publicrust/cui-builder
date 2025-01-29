@@ -1,6 +1,6 @@
 use yew::prelude::*;
 use web_sys::console;
-use crate::models::Element;
+use crate::models::element::Element;
 use crate::core::component::Component;
 
 fn find_element_by_id<'a>(elements: &'a [Element], id: &str) -> Option<&'a Element> {

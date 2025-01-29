@@ -1,5 +1,5 @@
 use yew::prelude::*;
-use crate::models::{Element, ElementType};
+use crate::models::element::{Element, ElementType};
 use crate::core::component::{Component, RectTransformComponent, ImageComponent, UnityCanvasTransform};
 
 #[derive(Properties, PartialEq)]

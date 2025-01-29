@@ -1,6 +1,8 @@
 use yew::prelude::*;
-use web_sys::{DragEvent, console};
-use crate::models::Element;
+use web_sys::{DragEvent, console, HtmlElement, MouseEvent, Node};
+use crate::core::utils::element::{Element, ElementType};
+use crate::{CuiPanel, CuiButton, CuiLabel};
+use crate::CuiElement;
 
 #[derive(Properties, PartialEq)]
 pub struct ElementItemProps {
@@ -65,8 +67,8 @@ pub fn element_item(props: &ElementItemProps) -> Html {
                 ondragover={ondragover}
                 ondrop={ondrop}
             >
-                <span class="element-name">{&props.element.name}</span>
-                <span class="element-type">{"("}{&props.element.element_type.to_string()}{")"}</span>
+                <span class="element-name">{&props.element.id}</span>
+                <span class="element-type">{"("}{format!("{:?}", &props.element.element_type)}{")"}</span>
             </div>
             if !props.element.children.is_empty() {
                 <div class="element-children">

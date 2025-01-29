@@ -12,11 +12,22 @@
 #![deny(clippy::use_debug)]
 #![deny(clippy::disallowed_types)]
 
-pub mod models;
-pub mod core;
+pub mod oxide_interface;
 pub mod components;
+pub mod core;
 pub mod styles;
+pub mod models;
+
+pub use oxide_interface::elements::{
+    cui_element::CuiElement,
+    cui_panel::CuiPanel,
+    cui_button::CuiButton,
+    cui_label::CuiLabel,
+    ICuiElement,
+};
 
 // Re-export commonly used types
-pub use models::{Element, ElementType};
-pub use core::component::Component; 
+pub use oxide_interface::{
+    CuiElementContainer,
+    components::ICuiComponent,
+}; 

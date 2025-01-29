@@ -1,6 +1,6 @@
-use web_sys::{MouseEvent, WheelEvent, TouchEvent, console};
 use yew::prelude::*;
-use crate::models::Element;
+use web_sys::{MouseEvent, WheelEvent};
+use crate::models::element::Element;
 use crate::core::component::Component;
 use wasm_bindgen::JsCast;
 use super::element::UnityElement;

@@ -1,5 +1,5 @@
 use yew::prelude::*;
-use crate::models::Element;
+use crate::models::element::Element;
 use crate::core::component::Component;
 use web_sys::DragEvent;
 
