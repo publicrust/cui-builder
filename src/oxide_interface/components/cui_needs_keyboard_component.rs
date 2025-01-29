@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use super::ICuiComponent;
 use std::fmt;
 
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
 pub struct CuiNeedsKeyboardComponent;
 
 #[typetag::serde]

@@ -5,6 +5,7 @@ pub mod cui_rect_transform_component;
 pub mod cui_text_component;
 pub mod cui_needs_cursor_component;
 pub mod cui_needs_keyboard_component;
+pub mod component_type;
 
 // -------------------------------------------------------------------
 // Общий трейт для всех компонентов

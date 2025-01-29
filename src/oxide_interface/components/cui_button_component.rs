@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use super::ICuiComponent;
 use std::fmt;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq)]
 pub struct CuiButtonComponent {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub command: Option<String>, // В C# есть поля на наклик и т.д.

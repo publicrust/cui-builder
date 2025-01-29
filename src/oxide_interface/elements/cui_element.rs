@@ -1,19 +1,19 @@
 use serde::{Serialize, Deserialize};
-use crate::oxide_interface::components::ICuiComponent;
+use crate::oxide_interface::components::{ICuiComponent, component_type::ComponentType};
 use super::ICuiElement;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct CuiElement {
     pub name: String,
     pub parent: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub destroy_ui: Option<String>,
-    pub components: Vec<Box<dyn ICuiComponent>>,
+    pub components: Vec<ComponentType>,
     pub fade_out: f32,
 }
 
 impl CuiElement {
-    pub fn new(name: String, parent: String, components: Vec<Box<dyn ICuiComponent>>, fade_out: f32) -> Self {
+    pub fn new(name: String, parent: String, components: Vec<ComponentType>, fade_out: f32) -> Self {
         Self {
             name,
             parent,
@@ -42,7 +42,7 @@ impl ICuiElement for CuiElement {
         self.fade_out
     }
 
-    fn get_components(&self) -> &[Box<dyn ICuiComponent>] {
+    fn get_components(&self) -> &[ComponentType] {
         &self.components
     }
 

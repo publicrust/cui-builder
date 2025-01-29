@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use super::ICuiComponent;
 use std::fmt;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct CuiRectTransform {
     pub anchormin: String,
     pub anchormax: String,
@@ -21,7 +21,7 @@ impl Default for CuiRectTransform {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct CuiRectTransformComponent {
     #[serde(flatten)]
     pub base: CuiRectTransform,
