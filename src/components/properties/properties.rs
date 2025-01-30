@@ -1,6 +1,7 @@
 use yew::prelude::*;
-use crate::models::{Element, ElementType};
+use crate::models::Element;
 use crate::core::component::Component;
+use crate::core::component::properties::RenderProperties;
 
 #[derive(Properties, PartialEq)]
 pub struct PropertiesProps {
@@ -33,22 +34,23 @@ pub fn properties(props: &PropertiesProps) -> Html {
             <div class="property-group">
                 <h4>{"Компоненты"}</h4>
                 {for props.element.components.iter().map(|component| {
+                    let on_update = {
+                        let id = props.element.id.clone();
+                        let on_update_component = props.on_update_component.clone();
+                        Callback::from(move |component: Component| {
+                            on_update_component.emit((id.clone(), component));
+                        })
+                    };
+
                     match component {
-                        Component::UnityCanvasTransform(transform) => {
-                            let on_update = {
-                                let id = props.element.id.clone();
-                                let on_update_component = props.on_update_component.clone();
-                                Callback::from(move |component: Component| {
-                                    on_update_component.emit((id.clone(), component));
-                                })
-                            };
-                            transform.render_properties_with_callback(on_update)
-                        },
-                        _ => html! {
-                            <div class="property-row">
-                                <label>{component.component_type()}</label>
-                            </div>
-                        }
+                        Component::RectTransform(transform) => transform.render_properties_with_callback(on_update),
+                        Component::Button(button) => button.render_properties_with_callback(on_update),
+                        Component::Text(text) => text.render_properties_with_callback(on_update),
+                        Component::Image(image) => image.render_properties_with_callback(on_update),
+                        Component::RawImage(raw_image) => raw_image.render_properties_with_callback(on_update),
+                        Component::NeedsCursor(cursor) => cursor.render_properties_with_callback(on_update),
+                        Component::NeedsKeyboard(keyboard) => keyboard.render_properties_with_callback(on_update),
+                        Component::UnityCanvasTransform(transform) => transform.render_properties_with_callback(on_update),
                     }
                 })}
             </div>

@@ -1,5 +1,5 @@
 pub mod unity_canvas;
-mod properties;
+pub mod properties;
 
 pub use unity_canvas::*;
 pub use properties::*;
