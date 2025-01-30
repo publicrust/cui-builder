@@ -1,9 +1,11 @@
 use yew::prelude::*;
-use crate::models::Element;
+use crate::models::{Element, ElementType};
+use crate::core::component::Component;
 
 #[derive(Properties, PartialEq)]
 pub struct PropertiesProps {
     pub element: Element,
+    pub on_update_component: Callback<(String, Component)>,
 }
 
 #[function_component(Properties)]
@@ -31,10 +33,22 @@ pub fn properties(props: &PropertiesProps) -> Html {
             <div class="property-group">
                 <h4>{"Компоненты"}</h4>
                 {for props.element.components.iter().map(|component| {
-                    html! {
-                        <div class="property-row">
-                            <label>{component.component_type()}</label>
-                        </div>
+                    match component {
+                        Component::UnityCanvasTransform(transform) => {
+                            let on_update = {
+                                let id = props.element.id.clone();
+                                let on_update_component = props.on_update_component.clone();
+                                Callback::from(move |component: Component| {
+                                    on_update_component.emit((id.clone(), component));
+                                })
+                            };
+                            transform.render_properties_with_callback(on_update)
+                        },
+                        _ => html! {
+                            <div class="property-row">
+                                <label>{component.component_type()}</label>
+                            </div>
+                        }
                     }
                 })}
             </div>

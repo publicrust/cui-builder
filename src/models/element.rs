@@ -10,6 +10,23 @@ use crate::oxide_interface::{
 use std::fmt;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct UnityCanvasElement {
+    pub id: String,
+    pub name: String,
+    pub transform: UnityCanvasTransform,
+    pub elements: Vec<CuiElement>,
+}
+
+impl PartialEq for UnityCanvasElement {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id 
+            && self.name == other.name 
+            && self.transform == other.transform
+            && self.elements == other.elements
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Element {
     pub id: String,
     pub name: String,
@@ -94,6 +111,7 @@ pub enum ElementType {
     Panel,
     Text,
     Button,
+    Container,
 }
 
 impl fmt::Display for ElementType {
@@ -102,6 +120,7 @@ impl fmt::Display for ElementType {
             ElementType::Panel => write!(f, "Panel"),
             ElementType::Text => write!(f, "Text"),
             ElementType::Button => write!(f, "Button"),
+            ElementType::Container => write!(f, "Container"),
         }
     }
 }

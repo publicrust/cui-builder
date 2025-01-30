@@ -43,4 +43,18 @@ impl Component {
             Component::UnityCanvasTransform(_) => "UnityCanvasTransform",
         }
     }
+}
+
+impl From<ComponentType> for Component {
+    fn from(component_type: ComponentType) -> Self {
+        match component_type {
+            ComponentType::RectTransform(c) => Component::RectTransform(c),
+            ComponentType::Image(c) => Component::Image(c),
+            ComponentType::Button(c) => Component::Button(c),
+            ComponentType::Text(c) => Component::Text(c),
+            ComponentType::RawImage(c) => Component::RawImage(c),
+            ComponentType::NeedsCursor(c) => Component::NeedsCursor(c),
+            ComponentType::NeedsKeyboard(c) => Component::NeedsKeyboard(c),
+        }
+    }
 } 

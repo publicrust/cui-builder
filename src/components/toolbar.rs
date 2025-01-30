@@ -9,6 +9,12 @@ use crate::oxide_interface::components::{
     cui_text_component::CuiTextComponent,
     cui_image_component::CuiImageComponent,
     cui_raw_image_component::CuiRawImageComponent,
+    component_type::ComponentType,
+};
+use crate::oxide_interface::{
+    CuiElementContainer,
+    elements::cui_element::CuiElement,
+    CuiHelper,
 };
 
 #[derive(Clone, Debug, PartialEq)]
@@ -49,16 +55,23 @@ pub fn toolbar(props: &ToolbarProps) -> Html {
         move |tool: Tool| {
             Callback::from(move |e: DragEvent| {
                 if let Some(dt) = e.data_transfer() {
-                    let tool_str = match tool {
-                        Tool::Select => "Tool::Select",
-                        Tool::UnityCanvas => "Tool::UnityCanvas",
-                        Tool::Panel => "Tool::Panel",
-                        Tool::Button => "Tool::Button",
-                        Tool::Label => "Tool::Label",
-                        Tool::Image => "Tool::Image",
-                        Tool::RawImage => "Tool::RawImage",
-                    };
-                    let _ = dt.set_data("text/plain", tool_str);
+                    match tool {
+                        Tool::UnityCanvas => {
+                            let _ = dt.set_data("text/plain", "Tool::UnityCanvas");
+                        },
+                        _ => {
+                            let tool_str = match tool {
+                                Tool::Select => "Tool::Select",
+                                Tool::Panel => "Tool::Panel",
+                                Tool::Button => "Tool::Button",
+                                Tool::Label => "Tool::Label",
+                                Tool::Image => "Tool::Image",
+                                Tool::RawImage => "Tool::RawImage",
+                                _ => unreachable!(),
+                            };
+                            let _ = dt.set_data("text/plain", tool_str);
+                        }
+                    }
                 }
             })
         }

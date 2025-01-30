@@ -1,8 +1,8 @@
 use yew::prelude::*;
 use web_sys::{DragEvent, MouseEvent, WheelEvent};
 use uuid::Uuid;
-use crate::models::element::{Element, ElementType};
-use crate::core::component::Component;
+use crate::models::element::{Element, ElementType, UnityCanvasElement};
+use crate::core::component::{Component, unity_canvas::UnityCanvasTransform};
 use crate::oxide_interface::{
     components::{
         cui_rect_transform_component::{CuiRectTransformComponent, CuiRectTransform},
@@ -12,13 +12,15 @@ use crate::oxide_interface::{
         cui_raw_image_component::CuiRawImageComponent,
     },
     elements::cui_element::CuiElement,
+    CuiElementContainer,
+    CuiHelper,
 };
 use super::unity::UnityCanvas;
 use crate::components::toolbar::{Toolbar, Tool};
 
 #[derive(Properties, Clone, PartialEq)]
 pub struct InfiniteCanvasProps {
-    pub elements: Vec<CuiElement>,
+    pub elements: Vec<Element>,
     pub selected_id: Option<String>,
     pub on_select: Callback<String>,
     pub on_reparent: Callback<(String, String)>,
@@ -96,23 +98,28 @@ pub fn infinite_canvas(props: &InfiniteCanvasProps) -> Html {
             if let Some(dt) = e.data_transfer() {
                 if let Ok(template) = dt.get_data("text/plain") {
                     web_sys::console::log_1(&format!("Dropped template: {}", template).into());
+                    
                     let element = match template.as_str() {
                         "Tool::UnityCanvas" => {
                             web_sys::console::log_1(&"Creating UnityCanvas".into());
-                            Element {
+                            let canvas = UnityCanvasElement {
                                 id: Uuid::new_v4().to_string(),
-                                name: "Unity Canvas".to_string(),
+                                name: format!("UnityCanvas_{}", Uuid::new_v4()),
+                                transform: UnityCanvasTransform {
+                                    x: 0.0,
+                                    y: 0.0,
+                                    width: 800.0,
+                                    height: 600.0,
+                                },
+                                elements: Vec::new(),
+                            };
+                            Element {
+                                id: canvas.id.clone(),
+                                name: canvas.name.clone(),
                                 parent: Some("Hud".to_string()),
-                                element_type: ElementType::Panel,
+                                element_type: ElementType::Container,
                                 components: vec![
-                                    Component::RectTransform(CuiRectTransformComponent {
-                                        base: CuiRectTransform {
-                                            anchormin: "0 0".to_string(),
-                                            anchormax: "1 1".to_string(),
-                                            offsetmin: "10 10".to_string(),
-                                            offsetmax: "-10 -10".to_string(),
-                                        }
-                                    }),
+                                    Component::UnityCanvasTransform(canvas.transform.clone())
                                 ],
                                 fade_out: 0.0,
                                 destroy_ui: None,
@@ -126,7 +133,14 @@ pub fn infinite_canvas(props: &InfiniteCanvasProps) -> Html {
                                 parent: Some("Hud".to_string()),
                                 element_type: ElementType::Panel,
                                 components: vec![
-                                    Component::RectTransform(CuiRectTransformComponent::default()),
+                                    Component::RectTransform(CuiRectTransformComponent {
+                                        base: CuiRectTransform {
+                                            anchormin: "0 0".to_string(),
+                                            anchormax: "1 1".to_string(),
+                                            offsetmin: "10 10".to_string(),
+                                            offsetmax: "-10 -10".to_string(),
+                                        }
+                                    }),
                                     Component::Image(CuiImageComponent::default()),
                                 ],
                                 fade_out: 0.0,
@@ -172,7 +186,14 @@ pub fn infinite_canvas(props: &InfiniteCanvasProps) -> Html {
                                 parent: Some("Hud".to_string()),
                                 element_type: ElementType::Panel,
                                 components: vec![
-                                    Component::RectTransform(CuiRectTransformComponent::default()),
+                                    Component::RectTransform(CuiRectTransformComponent {
+                                        base: CuiRectTransform {
+                                            anchormin: "0 0".to_string(),
+                                            anchormax: "1 1".to_string(),
+                                            offsetmin: "10 10".to_string(),
+                                            offsetmax: "-10 -10".to_string(),
+                                        }
+                                    }),
                                     Component::Image(CuiImageComponent::default()),
                                 ],
                                 fade_out: 0.0,
@@ -211,16 +232,26 @@ pub fn infinite_canvas(props: &InfiniteCanvasProps) -> Html {
         offset.0, offset.1, *scale
     );
 
-    // Группируем элементы по их родителям
-    let canvases = props.elements.iter()
-        .filter(|e| e.parent == "Hud")
-        .cloned()
-        .collect::<Vec<_>>();
+    // Группируем элементы по UnityCanvas
+    let mut unity_canvases = Vec::new();
 
-    let children = props.elements.iter()
-        .filter(|e| e.parent != "Hud")
-        .cloned()
-        .collect::<Vec<_>>();
+    // Находим все UnityCanvas
+    for element in props.elements.iter() {
+        if element.element_type == ElementType::Container {
+            if let Some(Component::UnityCanvasTransform(transform)) = element.components.first() {
+                let canvas = UnityCanvasElement {
+                    id: element.id.clone(),
+                    name: element.name.clone(),
+                    transform: transform.clone(),
+                    elements: props.elements.iter()
+                        .filter(|e| e.parent.as_ref().map_or(false, |p| p == &element.id))
+                        .map(|e| e.clone().into())
+                        .collect(),
+                };
+                unity_canvases.push(canvas);
+            }
+        }
+    }
 
     let canvas_class = classes!(
         "infinite-canvas",
@@ -277,15 +308,10 @@ pub fn infinite_canvas(props: &InfiniteCanvasProps) -> Html {
                 selected_tool={(*selected_tool).clone()}
             />
             <div class="canvas-content" style={transform_style}>
-                {for canvases.iter().map(|canvas| {
-                    let canvas_children = children.iter()
-                        .filter(|e| e.parent == canvas.name)
-                        .cloned()
-                        .collect::<Vec<_>>();
-
+                {for unity_canvases.iter().map(|canvas| {
                     html! {
                         <UnityCanvas
-                            elements={canvas_children}
+                            canvas={canvas.clone()}
                             selected_id={props.selected_id.clone()}
                             on_select={props.on_select.clone()}
                             on_reparent={props.on_reparent.clone()}

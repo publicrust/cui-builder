@@ -10,7 +10,7 @@ use crate::oxide_interface::components::cui_rect_transform_component::CuiRectTra
 
 #[function_component(App)]
 pub fn app() -> Html {
-    let container = use_state(|| CuiElementContainer::new());
+    let elements = use_state(Vec::new);
     let selected_id = use_state(|| None::<String>);
 
     let on_select = {
@@ -21,61 +21,60 @@ pub fn app() -> Html {
     };
 
     let on_reparent = {
-        let container = container.clone();
+        let elements = elements.clone();
         Callback::from(move |(child_id, new_parent_id): (String, String)| {
-            let mut new_container = (*container).clone();
+            let mut new_elements = (*elements).clone();
             
             // Находим элемент
-            if let Some(element_idx) = new_container.elements.iter().position(|e| e.name == child_id) {
+            if let Some(element_idx) = new_elements.iter().position(|e| e.id == child_id) {
                 // Обновляем parent
-                let mut element = new_container.elements[element_idx].clone();
-                element.parent = new_parent_id;
-                new_container.elements[element_idx] = element;
+                let mut element = new_elements[element_idx].clone();
+                element.parent = Some(new_parent_id);
+                new_elements[element_idx] = element;
             }
             
-            container.set(new_container);
+            elements.set(new_elements);
         })
     };
 
     let on_update_component = {
-        let container = container.clone();
+        let elements = elements.clone();
         Callback::from(move |(element_id, component): (String, Component)| {
-            let mut new_container = (*container).clone();
+            let mut new_elements = (*elements).clone();
             
             // Находим элемент
-            if let Some(element_idx) = new_container.elements.iter().position(|e| e.name == element_id) {
-                // Конвертируем Component в ComponentType и обновляем
-                let component_type = match component {
-                    Component::RectTransform(t) => ComponentType::RectTransform(t),
-                    Component::Button(b) => ComponentType::Button(b),
-                    Component::Text(t) => ComponentType::Text(t),
-                    Component::Image(i) => ComponentType::Image(i),
-                    Component::RawImage(r) => ComponentType::RawImage(r),
-                    Component::NeedsCursor(n) => ComponentType::NeedsCursor(n),
-                    Component::NeedsKeyboard(n) => ComponentType::NeedsKeyboard(n),
-                    Component::UnityCanvasTransform(_) => return,
-                };
+            if let Some(element_idx) = new_elements.iter().position(|e| e.id == element_id) {
+                let mut element = new_elements[element_idx].clone();
                 
-                let mut element = new_container.elements[element_idx].clone();
-                if let Some(idx) = element.components.iter().position(|c| c.component_type() == component_type.component_type()) {
-                    element.components[idx] = component_type;
+                // Обновляем компонент
+                if let Some(idx) = element.components.iter().position(|c| match (c, &component) {
+                    (Component::RectTransform(_), Component::RectTransform(_)) => true,
+                    (Component::Button(_), Component::Button(_)) => true,
+                    (Component::Text(_), Component::Text(_)) => true,
+                    (Component::Image(_), Component::Image(_)) => true,
+                    (Component::RawImage(_), Component::RawImage(_)) => true,
+                    (Component::NeedsCursor(_), Component::NeedsCursor(_)) => true,
+                    (Component::NeedsKeyboard(_), Component::NeedsKeyboard(_)) => true,
+                    (Component::UnityCanvasTransform(_), Component::UnityCanvasTransform(_)) => true,
+                    _ => false,
+                }) {
+                    element.components[idx] = component;
                 } else {
-                    element.components.push(component_type);
+                    element.components.push(component);
                 }
-                new_container.elements[element_idx] = element;
+                new_elements[element_idx] = element;
             }
             
-            container.set(new_container);
+            elements.set(new_elements);
         })
     };
 
     let on_add_element = {
-        let container = container.clone();
+        let elements = elements.clone();
         Callback::from(move |element: Element| {
-            let mut new_container = (*container).clone();
-            let cui_element: CuiElement = element.into();
-            new_container.add_element(cui_element);
-            container.set(new_container);
+            let mut new_elements = (*elements).clone();
+            new_elements.push(element);
+            elements.set(new_elements);
         })
     };
 
@@ -84,8 +83,7 @@ pub fn app() -> Html {
             <div class="sidebar">
                 <Toolbar on_add_element={on_add_element.clone()} />
                 <div class="element-list">
-                    {for container.elements.iter().map(|element| {
-                        let element = Element::from(element.clone());
+                    {for elements.iter().map(|element| {
                         html! {
                             <div 
                                 key={element.id.clone()}
@@ -109,7 +107,7 @@ pub fn app() -> Html {
             </div>
             <div class="workspace">
                 <InfiniteCanvas
-                    elements={container.elements.clone()}
+                    elements={(*elements).clone()}
                     selected_id={(*selected_id).clone()}
                     on_select={on_select.clone()}
                     on_reparent={on_reparent.clone()}
@@ -119,7 +117,7 @@ pub fn app() -> Html {
             </div>
             <div class="properties">
                 <PropertiesPanel
-                    container={(*container).clone()}
+                    elements={(*elements).clone()}
                     selected_id={(*selected_id).clone()}
                 />
             </div>
