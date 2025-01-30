@@ -1,0 +1,192 @@
+/* Canvas styles */
+.infinite-canvas {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    background: #1e1e1e;
+    user-select: none;
+    border: none;
+}
+
+.infinite-canvas.panning {
+    cursor: grab;
+}
+
+.canvas-controls {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: #252526;
+    padding: 8px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    border: 1px solid #333;
+}
+
+.canvas-controls button {
+    background: #333333;
+    border: none;
+    color: #ffffff;
+    border-radius: 4px;
+    cursor: pointer;
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.canvas-controls button:hover {
+    background: #404040;
+}
+
+.canvas-controls button:active {
+    background: #505050;
+}
+
+.canvas-controls button.zoom-in,
+.canvas-controls button.zoom-out {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.canvas-controls button.reset {
+    font-size: 13px;
+    padding: 0 12px;
+    white-space: nowrap;
+    min-width: auto;
+    background: #2d2d2d;
+}
+
+.zoom-level {
+    background: #1e1e1e;
+    padding: 6px 12px;
+    border-radius: 4px;
+    color: #ffffff;
+    min-width: 60px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid #333;
+}
+
+.canvas-content {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    transform-origin: center;
+}
+
+/* Unity Canvas styles */
+.unity-canvas {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    cursor: default;
+}
+
+.unity-canvas.selected {
+    border-color: #3794ff;
+    z-index: 1;
+}
+
+.unity-canvas.drag-over {
+    border: 2px dashed #3794ff;
+    background: rgba(55, 148, 255, 0.1);
+}
+
+.unity-canvas-content {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: visible;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.unity-element {
+    position: absolute;
+    box-sizing: border-box;
+    min-width: 10px;
+    min-height: 10px;
+    user-select: none;
+    cursor: pointer;
+}
+
+.unity-element[data-type="UnityCanvas"] {
+    position: relative;
+    width: 800px;
+    height: 600px;
+    background: #1e1e1e;
+    border: 1px solid #444;
+    overflow: hidden;
+}
+
+.unity-element[data-type="UnityCanvas"] > .unity-element-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transform-origin: left bottom;
+    transform: scale(1, -1);
+}
+
+.unity-element[data-type="UnityCanvas"] .unity-element {
+    position: absolute;
+    background: rgba(60, 60, 60, 0.8);
+    border: 1px solid #555;
+    display: flex;
+    flex-direction: column;
+    transform: scale(1, -1);
+}
+
+.unity-element[data-type="UnityCanvas"] .unity-element .unity-element {
+    transform: none;
+}
+
+.unity-element.selected {
+    outline: 2px solid #0078d4;
+}
+
+.unity-element.dragging {
+    opacity: 0.8;
+}
+
+/* Anchor points */
+.unity-element[data-type="Panel"]::before {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: #0078d4;
+    border-radius: 50%;
+    bottom: 0;
+    left: 0;
+    transform: translate(-50%, 50%);
+}
+
+.unity-element[data-type="Panel"]::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: #0078d4;
+    border-radius: 50%;
+    top: 0;
+    right: 0;
+    transform: translate(50%, -50%);
+}
+
+.unity-element[data-type="Panel"].selected::before,
+.unity-element[data-type="Panel"].selected::after {
+    background: #ffffff;
+} 

@@ -1,5 +1,6 @@
-use crate::models::element::{Element, ElementType};
-use crate::{CuiElement, CuiPanel, CuiButton, CuiLabel};
+use crate::models::element::Element;
+use crate::oxide_interface::CuiElementContainer;
+use crate::oxide_interface::elements::cui_element::CuiElement;
 
 impl Element {
     pub fn from_cui_element(_element: &CuiElement) -> Self {
@@ -13,40 +14,21 @@ impl Element {
     }
 }
 
-pub fn find_element_by_id<'a>(elements: &'a [Element], id: &str) -> Option<&'a Element> {
-    for element in elements {
-        if element.id == id {
-            return Some(element);
-        }
-        if let Some(found) = find_element_by_id(&element.children, id) {
-            return Some(found);
-        }
-    }
-    None
+pub fn find_element_by_id<'a>(container: &'a CuiElementContainer, id: &str) -> Option<Element> {
+    container.elements.iter()
+        .find(|e| e.name == id)
+        .map(|e| Element::from(e.clone()))
 }
 
-pub fn find_element_by_id_mut<'a>(elements: &'a mut [Element], id: &str) -> Option<&'a mut Element> {
-    for element in elements {
-        if element.id == id {
-            return Some(element);
-        }
-        if let Some(found) = find_element_by_id_mut(&mut element.children, id) {
-            return Some(found);
-        }
-    }
-    None
+pub fn find_element_by_id_mut<'a>(container: &'a mut CuiElementContainer, id: &str) -> Option<&'a mut CuiElement> {
+    container.elements.iter_mut()
+        .find(|e| e.name == id)
 }
 
-pub fn remove_element_by_id(elements: &mut Vec<Element>, id: &str) -> Option<Element> {
-    let mut i = 0;
-    while i < elements.len() {
-        if elements[i].id == id {
-            return Some(elements.remove(i));
-        }
-        if let Some(element) = remove_element_by_id(&mut elements[i].children, id) {
-            return Some(element);
-        }
-        i += 1;
+pub fn remove_element_by_id(container: &mut CuiElementContainer, id: &str) -> Option<CuiElement> {
+    if let Some(pos) = container.elements.iter().position(|e| e.name == id) {
+        Some(container.elements.remove(pos))
+    } else {
+        None
     }
-    None
 } 

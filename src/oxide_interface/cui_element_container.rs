@@ -35,6 +35,10 @@ impl CuiElementContainer {
         }
     }
 
+    pub fn add_element(&mut self, element: CuiElement) {
+        self.elements.push(element);
+    }
+
     pub fn add_button(&mut self, name: String, parent: String) -> String {
         let button = CuiButtonComponent::default();
         let rect_transform = CuiRectTransformComponent::default();

@@ -1,0 +1,52 @@
+/* Properties panel styles */
+.properties {
+    width: 300px;
+    min-width: 300px;
+    background: #252526;
+    border-left: 1px solid #333;
+    overflow-y: auto;
+}
+
+.properties-content {
+    padding: 10px;
+}
+
+.property-group {
+    margin-bottom: 20px;
+}
+
+.property-group h4 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: normal;
+    color: #569cd6;
+}
+
+.property-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.property-row label {
+    width: 100px;
+    color: #9cdcfe;
+    font-size: 12px;
+}
+
+.property-row input,
+.property-row select {
+    flex: 1;
+    background-color: #3c3c3c;
+    border: 1px solid #404040;
+    color: #ffffff;
+    padding: 4px 8px;
+    border-radius: 2px;
+    font-size: 12px;
+}
+
+.property-row input:focus,
+.property-row select:focus {
+    outline: none;
+    border-color: #569cd6;
+} 

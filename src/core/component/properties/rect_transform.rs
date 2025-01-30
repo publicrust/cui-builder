@@ -1,6 +1,8 @@
 use yew::prelude::*;
-use crate::oxide_interface::components::cui_rect_transform_component::CuiRectTransformComponent;
+use web_sys::{HtmlInputElement, HtmlElement};
+use wasm_bindgen::JsCast;
 use crate::core::component::Component;
+use crate::oxide_interface::components::cui_rect_transform_component::CuiRectTransformComponent;
 use super::RenderProperties;
 
 impl RenderProperties for CuiRectTransformComponent {
@@ -91,6 +93,28 @@ impl RenderProperties for CuiRectTransformComponent {
                     />
                 </div>
             </div>
+        }
+    }
+
+    fn render_properties(&self, container: &HtmlElement) {
+        container.set_attribute("data-anchormin", &self.base.anchormin).ok();
+        container.set_attribute("data-anchormax", &self.base.anchormax).ok();
+        container.set_attribute("data-offsetmin", &self.base.offsetmin).ok();
+        container.set_attribute("data-offsetmax", &self.base.offsetmax).ok();
+    }
+
+    fn update_from_element(&mut self, element: &HtmlElement) {
+        if let Some(anchormin) = element.get_attribute("data-anchormin") {
+            self.base.anchormin = anchormin;
+        }
+        if let Some(anchormax) = element.get_attribute("data-anchormax") {
+            self.base.anchormax = anchormax;
+        }
+        if let Some(offsetmin) = element.get_attribute("data-offsetmin") {
+            self.base.offsetmin = offsetmin;
+        }
+        if let Some(offsetmax) = element.get_attribute("data-offsetmax") {
+            self.base.offsetmax = offsetmax;
         }
     }
 } 

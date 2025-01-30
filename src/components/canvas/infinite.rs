@@ -1,178 +1,284 @@
 use yew::prelude::*;
-use web_sys::{MouseEvent, WheelEvent};
-use crate::models::element::Element;
+use web_sys::{DragEvent, MouseEvent, WheelEvent};
+use uuid::Uuid;
+use crate::models::element::{Element, ElementType};
 use crate::core::component::Component;
-use wasm_bindgen::JsCast;
-use super::element::UnityElement;
+use crate::oxide_interface::{
+    components::{
+        cui_rect_transform_component::{CuiRectTransformComponent, CuiRectTransform},
+        cui_button_component::CuiButtonComponent,
+        cui_text_component::CuiTextComponent,
+        cui_image_component::CuiImageComponent,
+        cui_raw_image_component::CuiRawImageComponent,
+    },
+    elements::cui_element::CuiElement,
+};
+use super::unity::UnityCanvas;
 
-#[derive(Properties, PartialEq)]
+#[derive(Properties, Clone, PartialEq)]
 pub struct InfiniteCanvasProps {
-    pub elements: Vec<Element>,
+    pub elements: Vec<CuiElement>,
     pub selected_id: Option<String>,
     pub on_select: Callback<String>,
-    pub on_reparent: Callback<(String, Option<String>)>,
+    pub on_reparent: Callback<(String, String)>,
     pub on_update_component: Callback<(String, Component)>,
-}
-
-#[derive(Clone, PartialEq)]
-struct WorkspaceState {
-    offset_x: f64,
-    offset_y: f64,
-    scale: f64,
-}
-
-impl Default for WorkspaceState {
-    fn default() -> Self {
-        Self {
-            offset_x: 0.0,
-            offset_y: 0.0,
-            scale: 1.0,
-        }
-    }
+    pub on_add_element: Callback<Element>,
 }
 
 #[function_component(InfiniteCanvas)]
 pub fn infinite_canvas(props: &InfiniteCanvasProps) -> Html {
-    let workspace_state = use_state(WorkspaceState::default);
-    let is_panning = use_state(|| false);
-    let last_mouse_pos = use_state(|| None::<(f64, f64)>);
+    let panning = use_state(|| false);
+    let scale = use_state(|| 1.0);
+    let offset_x = use_state(|| 0.0);
+    let offset_y = use_state(|| 0.0);
+    let last_mouse_x = use_state(|| 0.0);
+    let last_mouse_y = use_state(|| 0.0);
 
     let onmousedown = {
-        let is_panning = is_panning.clone();
-        let last_mouse_pos = last_mouse_pos.clone();
+        let panning = panning.clone();
+        let last_mouse_x = last_mouse_x.clone();
+        let last_mouse_y = last_mouse_y.clone();
         Callback::from(move |e: MouseEvent| {
-            if e.button() == 2 {
+            if e.buttons() == 2 { // Правая кнопка мыши
                 e.prevent_default();
-                is_panning.set(true);
-                last_mouse_pos.set(Some((e.client_x() as f64, e.client_y() as f64)));
+                panning.set(true);
+                last_mouse_x.set(e.client_x() as f64);
+                last_mouse_y.set(e.client_y() as f64);
             }
         })
     };
 
     let onmouseup = {
-        let is_panning = is_panning.clone();
+        let panning = panning.clone();
         Callback::from(move |_: MouseEvent| {
-            is_panning.set(false);
+            panning.set(false);
         })
     };
 
     let onmousemove = {
-        let is_panning = is_panning.clone();
-        let last_mouse_pos = last_mouse_pos.clone();
-        let workspace_state = workspace_state.clone();
+        let panning = panning.clone();
+        let offset_x = offset_x.clone();
+        let offset_y = offset_y.clone();
+        let last_mouse_x = last_mouse_x.clone();
+        let last_mouse_y = last_mouse_y.clone();
         Callback::from(move |e: MouseEvent| {
-            if *is_panning {
-                if let Some((last_x, last_y)) = *last_mouse_pos {
-                    let dx = e.client_x() as f64 - last_x;
-                    let dy = e.client_y() as f64 - last_y;
-                    let mut new_state = (*workspace_state).clone();
-                    new_state.offset_x += dx;
-                    new_state.offset_y += dy;
-                    workspace_state.set(new_state);
-                }
-                last_mouse_pos.set(Some((e.client_x() as f64, e.client_y() as f64)));
+            if *panning {
+                let dx = e.client_x() as f64 - *last_mouse_x;
+                let dy = e.client_y() as f64 - *last_mouse_y;
+                offset_x.set(*offset_x + dx);
+                offset_y.set(*offset_y + dy);
+                last_mouse_x.set(e.client_x() as f64);
+                last_mouse_y.set(e.client_y() as f64);
             }
         })
     };
 
+    let onmouseleave = {
+        let panning = panning.clone();
+        Callback::from(move |_: MouseEvent| {
+            panning.set(false);
+        })
+    };
+
     let onwheel = {
-        let workspace_state = workspace_state.clone();
+        let scale = scale.clone();
         Callback::from(move |e: WheelEvent| {
             e.prevent_default();
-            let mut new_state = (*workspace_state).clone();
-            let delta = -e.delta_y() as f64;
-            let zoom_factor = if delta > 0.0 { 1.1 } else { 0.9 };
-            new_state.scale *= zoom_factor;
-            workspace_state.set(new_state);
+            let delta = if e.delta_y() > 0.0 { 0.9f64 } else { 1.1f64 };
+            scale.set((*scale * delta).max(0.1f64).min(5.0f64));
         })
     };
 
-    let workspace_style = format!(
+    let ondragover = Callback::from(|e: DragEvent| {
+        e.prevent_default();
+    });
+
+    let ondrop = {
+        let on_add_element = props.on_add_element.clone();
+        Callback::from(move |e: DragEvent| {
+            e.prevent_default();
+            if let Some(dt) = e.data_transfer() {
+                if let Ok(template) = dt.get_data("text/plain") {
+                    let element = match template.as_str() {
+                        "UnityCanvas" => Element {
+                            id: Uuid::new_v4().to_string(),
+                            name: "Unity Canvas".to_string(),
+                            parent: None,
+                            element_type: ElementType::Panel,
+                            components: vec![
+                                Component::RectTransform(CuiRectTransformComponent {
+                                    base: CuiRectTransform {
+                                        anchormin: "0 0".to_string(),
+                                        anchormax: "1 1".to_string(),
+                                        offsetmin: "10 10".to_string(),
+                                        offsetmax: "-10 -10".to_string(),
+                                    }
+                                }),
+                            ],
+                            fade_out: 0.0,
+                            destroy_ui: None,
+                        },
+                        "Panel" => Element {
+                            id: Uuid::new_v4().to_string(),
+                            name: "Panel".to_string(),
+                            parent: None,
+                            element_type: ElementType::Panel,
+                            components: vec![
+                                Component::RectTransform(CuiRectTransformComponent::default()),
+                                Component::Image(CuiImageComponent::default()),
+                            ],
+                            fade_out: 0.0,
+                            destroy_ui: None,
+                        },
+                        "Button" => Element {
+                            id: Uuid::new_v4().to_string(),
+                            name: "Button".to_string(),
+                            parent: None,
+                            element_type: ElementType::Button,
+                            components: vec![
+                                Component::RectTransform(CuiRectTransformComponent::default()),
+                                Component::Button(CuiButtonComponent::default()),
+                                Component::Text(CuiTextComponent::default()),
+                            ],
+                            fade_out: 0.0,
+                            destroy_ui: None,
+                        },
+                        "Label" => Element {
+                            id: Uuid::new_v4().to_string(),
+                            name: "Label".to_string(),
+                            parent: None,
+                            element_type: ElementType::Text,
+                            components: vec![
+                                Component::RectTransform(CuiRectTransformComponent::default()),
+                                Component::Text(CuiTextComponent::default()),
+                            ],
+                            fade_out: 0.0,
+                            destroy_ui: None,
+                        },
+                        "Image" => Element {
+                            id: Uuid::new_v4().to_string(),
+                            name: "Image".to_string(),
+                            parent: None,
+                            element_type: ElementType::Panel,
+                            components: vec![
+                                Component::RectTransform(CuiRectTransformComponent::default()),
+                                Component::Image(CuiImageComponent::default()),
+                            ],
+                            fade_out: 0.0,
+                            destroy_ui: None,
+                        },
+                        "RawImage" => Element {
+                            id: Uuid::new_v4().to_string(),
+                            name: "RawImage".to_string(),
+                            parent: None,
+                            element_type: ElementType::Panel,
+                            components: vec![
+                                Component::RectTransform(CuiRectTransformComponent::default()),
+                                Component::RawImage(CuiRawImageComponent::default()),
+                            ],
+                            fade_out: 0.0,
+                            destroy_ui: None,
+                        },
+                        _ => return,
+                    };
+                    on_add_element.emit(element);
+                }
+            }
+        })
+    };
+
+    let transform_style = format!(
         "transform: translate({}px, {}px) scale({});",
-        workspace_state.offset_x, workspace_state.offset_y, workspace_state.scale
+        *offset_x, *offset_y, *scale
     );
 
-    // Вычисляем размер ячейки сетки в зависимости от масштаба
-    let base_grid_size = 100.0; // Базовый размер ячейки
-    let scale = workspace_state.scale;
-    
-    // Определяем, какие уровни сетки нужно показать
-    let show_small = scale > 0.7;
-    let show_medium = scale > 0.3 && scale <= 1.5;
-    let show_large = scale <= 0.7;
+    // Группируем элементы по их родителям
+    let canvases = props.elements.iter()
+        .filter(|e| e.parent == "Hud")
+        .cloned()
+        .collect::<Vec<_>>();
 
-    let grid_style = format!(
-        "background-size: {}px {}px;",
-        base_grid_size, base_grid_size
+    let children = props.elements.iter()
+        .filter(|e| e.parent != "Hud")
+        .cloned()
+        .collect::<Vec<_>>();
+
+    let canvas_class = classes!(
+        "infinite-canvas",
+        (*panning).then_some("panning")
     );
-
-    let canvas_class = if *is_panning {
-        "infinite-canvas panning"
-    } else {
-        "infinite-canvas"
-    };
-
-    let zoom_in = {
-        let workspace_state = workspace_state.clone();
-        Callback::from(move |_| {
-            let mut new_state = (*workspace_state).clone();
-            new_state.scale *= 1.2;
-            workspace_state.set(new_state);
-        })
-    };
-
-    let zoom_out = {
-        let workspace_state = workspace_state.clone();
-        Callback::from(move |_| {
-            let mut new_state = (*workspace_state).clone();
-            new_state.scale /= 1.2;
-            workspace_state.set(new_state);
-        })
-    };
 
     html! {
-        <div
+        <div 
             class={canvas_class}
-            onmousedown={onmousedown}
-            onmouseup={onmouseup}
-            onmousemove={onmousemove}
-            onwheel={onwheel}
             oncontextmenu={Callback::from(|e: MouseEvent| e.prevent_default())}
+            {onmousedown}
+            {onmouseup}
+            {onmousemove}
+            {onmouseleave}
+            {onwheel}
+            {ondragover}
+            {ondrop}
         >
-            <div class="grid-container">
-                if show_small {
-                    <div class="grid small" style={grid_style}></div>
-                }
-                if show_medium {
-                    <div class="grid medium" style={format!("background-size: {}px {}px;", base_grid_size * 2.0, base_grid_size * 2.0)}></div>
-                }
-                if show_large {
-                    <div class="grid large" style={format!("background-size: {}px {}px;", base_grid_size * 4.0, base_grid_size * 4.0)}></div>
-                }
+            <div class="canvas-controls">
+                <button class="zoom-in" onclick={
+                    let scale = scale.clone();
+                    Callback::from(move |_| {
+                        let new_scale = (*scale * 1.2f64).min(5.0f64);
+                        scale.set(new_scale);
+                    })
+                }>
+                    {"+"}
+                </button>
+                <div class="zoom-level">
+                    {format!("{}%", (*scale * 100.0f64).round())}
+                </div>
+                <button class="zoom-out" onclick={
+                    let scale = scale.clone();
+                    Callback::from(move |_| {
+                        let new_scale = (*scale * 0.8f64).max(0.1f64);
+                        scale.set(new_scale);
+                    })
+                }>
+                    {"-"}
+                </button>
+                <button class="reset" onclick={
+                    let scale = scale.clone();
+                    Callback::from(move |_| scale.set(1.0f64))
+                }>
+                    {"Reset Zoom"}
+                </button>
+                <button class="reset" onclick={
+                    let scale = scale.clone();
+                    let offset_x = offset_x.clone();
+                    let offset_y = offset_y.clone();
+                    Callback::from(move |_| {
+                        scale.set(1.0f64);
+                        offset_x.set(0.0f64);
+                        offset_y.set(0.0f64);
+                    })
+                }>
+                    {"Reset View"}
+                </button>
             </div>
-            <div class="workspace" style={workspace_style}>
-                {for props.elements.iter().map(|element| {
+            <div class="canvas-content" style={transform_style}>
+                {for canvases.iter().map(|canvas| {
+                    let canvas_children = children.iter()
+                        .filter(|e| e.parent == canvas.name)
+                        .cloned()
+                        .collect::<Vec<_>>();
+
                     html! {
-                        <UnityElement
-                            element={element.clone()}
+                        <UnityCanvas
+                            elements={canvas_children}
                             selected_id={props.selected_id.clone()}
                             on_select={props.on_select.clone()}
                             on_reparent={props.on_reparent.clone()}
                             on_update_component={props.on_update_component.clone()}
+                            on_add_element={props.on_add_element.clone()}
                         />
                     }
                 })}
-            </div>
-            <div class="zoom-controls">
-                <button class="zoom-button" onclick={zoom_in}>
-                    {"+"}
-                </button>
-                <div class="zoom-level">
-                    {format!("{}%", (workspace_state.scale * 100.0) as i32)}
-                </div>
-                <button class="zoom-button" onclick={zoom_out}>
-                    {"-"}
-                </button>
             </div>
         </div>
     }

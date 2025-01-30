@@ -30,4 +30,11 @@ pub use oxide_interface::elements::{
 pub use oxide_interface::{
     CuiElementContainer,
     components::ICuiComponent,
+};
+
+// Re-export components
+pub use components::{
+    sidebar::Sidebar,
+    canvas::InfiniteCanvas,
+    properties::Properties,
 }; 

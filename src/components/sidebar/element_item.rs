@@ -1,10 +1,13 @@
 use yew::prelude::*;
 use web_sys::DragEvent;
-use crate::models::element::{Element, ElementType};
+use crate::models::element::Element;
+use crate::oxide_interface::CuiElementContainer;
+use crate::oxide_interface::elements::cui_element::CuiElement;
 
 #[derive(Properties, PartialEq)]
 pub struct ElementItemProps {
     pub element: Element,
+    pub container: CuiElementContainer,
     pub selected_id: Option<String>,
     pub on_select: Callback<String>,
     pub on_reparent: Callback<(String, Option<String>)>,
@@ -29,7 +32,6 @@ pub fn element_item(props: &ElementItemProps) -> Html {
     let ondragstart = {
         let id = props.element.id.clone();
         Callback::from(move |e: DragEvent| {
-
             if let Some(data_transfer) = e.data_transfer() {
                 let _ = data_transfer.set_data("text/plain", &id);
             }
@@ -55,6 +57,12 @@ pub fn element_item(props: &ElementItemProps) -> Html {
         })
     };
 
+    // Находим дочерние элементы
+    let children: Vec<Element> = props.container.elements.iter()
+        .filter(|e: &&CuiElement| e.parent == props.element.id)
+        .map(|e| Element::from(e.clone()))
+        .collect();
+
     html! {
         <div class="element-item">
             <div
@@ -68,12 +76,13 @@ pub fn element_item(props: &ElementItemProps) -> Html {
                 <span class="element-name">{&props.element.id}</span>
                 <span class="element-type">{"("}{format!("{:?}", &props.element.element_type)}{")"}</span>
             </div>
-            if !props.element.children.is_empty() {
+            if !children.is_empty() {
                 <div class="element-children">
-                    {for props.element.children.iter().map(|child| {
+                    {for children.iter().map(|child| {
                         html! {
                             <ElementItem
                                 element={child.clone()}
+                                container={props.container.clone()}
                                 selected_id={props.selected_id.clone()}
                                 on_select={props.on_select.clone()}
                                 on_reparent={props.on_reparent.clone()}

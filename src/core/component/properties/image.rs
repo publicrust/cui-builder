@@ -1,4 +1,6 @@
 use yew::prelude::*;
+use web_sys::{HtmlInputElement, HtmlElement};
+use wasm_bindgen::JsCast;
 use crate::oxide_interface::components::cui_image_component::CuiImageComponent;
 use crate::core::component::Component;
 use super::RenderProperties;
@@ -178,6 +180,24 @@ impl RenderProperties for CuiImageComponent {
                     />
                 </div>
             </div>
+        }
+    }
+
+    fn render_properties(&self, container: &HtmlElement) {
+        if let Some(sprite) = &self.sprite {
+            container.set_attribute("data-sprite", sprite).ok();
+        }
+        if let Some(material) = &self.material {
+            container.set_attribute("data-material", material).ok();
+        }
+    }
+
+    fn update_from_element(&mut self, element: &HtmlElement) {
+        if let Some(sprite) = element.get_attribute("data-sprite") {
+            self.sprite = Some(sprite);
+        }
+        if let Some(material) = element.get_attribute("data-material") {
+            self.material = Some(material);
         }
     }
 } 

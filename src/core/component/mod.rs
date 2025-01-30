@@ -1,48 +1,46 @@
-mod unity_canvas;
+pub mod unity_canvas;
 mod properties;
 
 pub use unity_canvas::*;
-pub use properties::RenderProperties;
+pub use properties::*;
 pub use crate::oxide_interface::components::{
     cui_rect_transform_component::CuiRectTransformComponent,
     cui_image_component::CuiImageComponent,
     cui_text_component::CuiTextComponent,
     cui_button_component::CuiButtonComponent,
+    cui_raw_image_component::CuiRawImageComponent,
+    cui_needs_cursor_component::CuiNeedsCursorComponent,
+    cui_needs_keyboard_component::CuiNeedsKeyboardComponent,
     ICuiComponent,
     component_type::ComponentType,
 };
 
-use serde::{Serialize, Deserialize};
 use yew::prelude::*;
+use serde::{Serialize, Deserialize};
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
-#[serde(tag = "type")]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Component {
     RectTransform(CuiRectTransformComponent),
-    UnityCanvasTransform(UnityCanvasTransform),
     Image(CuiImageComponent),
-    Text(CuiTextComponent),
     Button(CuiButtonComponent),
+    Text(CuiTextComponent),
+    RawImage(CuiRawImageComponent),
+    NeedsCursor(CuiNeedsCursorComponent),
+    NeedsKeyboard(CuiNeedsKeyboardComponent),
+    UnityCanvasTransform(UnityCanvasTransform),
 }
 
 impl Component {
     pub fn component_type(&self) -> &'static str {
         match self {
             Component::RectTransform(_) => "RectTransform",
-            Component::UnityCanvasTransform(_) => "UnityCanvasTransform",
             Component::Image(_) => "Image",
-            Component::Text(_) => "Text",
             Component::Button(_) => "Button",
-        }
-    }
-
-    pub fn render_properties_with_callback(&self, on_update: Callback<Component>) -> Html {
-        match self {
-            Component::RectTransform(c) => c.render_properties_with_callback(on_update),
-            Component::UnityCanvasTransform(c) => c.render_properties_with_callback(on_update),
-            Component::Image(c) => c.render_properties_with_callback(on_update),
-            Component::Text(c) => c.render_properties_with_callback(on_update),
-            Component::Button(c) => c.render_properties_with_callback(on_update),
+            Component::Text(_) => "Text",
+            Component::RawImage(_) => "RawImage",
+            Component::NeedsCursor(_) => "NeedsCursor",
+            Component::NeedsKeyboard(_) => "NeedsKeyboard",
+            Component::UnityCanvasTransform(_) => "UnityCanvasTransform",
         }
     }
 } 
