@@ -1,5 +1,4 @@
 pub mod element_item;
-pub mod toolbar;
 
 use yew::prelude::*;
 use crate::models::Element;

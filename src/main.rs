@@ -3,7 +3,7 @@
 use yew::prelude::*;
 use cui_builder::components::{
     canvas::InfiniteCanvas,
-    sidebar::toolbar::Toolbar,
+    toolbar::Toolbar,
     properties::panel::PropertiesPanel,
 };
 use cui_builder::models::Element;
@@ -16,11 +16,13 @@ use cui_builder::oxide_interface::{
     elements::cui_element::CuiElement,
 };
 use cui_builder::core::component::Component;
+use cui_builder::components::toolbar::Tool;
 
 #[function_component(App)]
 pub fn app() -> Html {
     let container = use_state(|| CuiElementContainer::new());
     let selected_id = use_state(|| None::<String>);
+    let selected_tool = use_state(|| Tool::Select);
 
     let on_select = {
         let selected_id = selected_id.clone();
@@ -88,10 +90,25 @@ pub fn app() -> Html {
         })
     };
 
+    let on_tool_change = {
+        let selected_tool = selected_tool.clone();
+        Callback::from(move |tool: Tool| {
+            selected_tool.set(tool);
+        })
+    };
+
     html! {
         <div class="app">
             <div class="sidebar">
-                <Toolbar on_add_element={on_add_element.clone()} />
+                <Toolbar 
+                    on_add_element={on_add_element.clone()}
+                    scale={1.0}
+                    on_zoom_in={Callback::from(|_| {})}
+                    on_zoom_out={Callback::from(|_| {})}
+                    on_zoom_reset={Callback::from(|_| {})}
+                    on_tool_change={on_tool_change.clone()}
+                    selected_tool={(*selected_tool).clone()}
+                />
                 <div class="element-list">
                     {for container.elements.iter().map(|element| {
                         let element = Element::from(element.clone());

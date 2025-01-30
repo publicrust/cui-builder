@@ -8,10 +8,15 @@
     background: #1e1e1e;
     user-select: none;
     border: none;
+    cursor: default;
+}
+
+.infinite-canvas.select-tool {
+    cursor: pointer;
 }
 
 .infinite-canvas.panning {
-    cursor: grab;
+    cursor: grabbing;
 }
 
 .canvas-controls {
@@ -189,4 +194,73 @@
 .unity-element[data-type="Panel"].selected::before,
 .unity-element[data-type="Panel"].selected::after {
     background: #ffffff;
+}
+
+.tool-panel {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    background: #2c2c2c;
+    border-radius: 8px;
+    padding: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+.tool-group {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 6px;
+    background: #363636;
+}
+
+.tool-group + .tool-group {
+    margin-left: 8px;
+    border-left: 1px solid #404040;
+    padding-left: 12px;
+}
+
+.tool-button {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: #e0e0e0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tool-button:hover {
+    background: #404040;
+}
+
+.tool-button.active {
+    background: #505050;
+}
+
+.tool-icon {
+    font-size: 16px;
+    line-height: 1;
+}
+
+.zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.zoom-level {
+    min-width: 50px;
+    text-align: center;
+    color: #e0e0e0;
+    font-size: 12px;
+    padding: 0 8px;
 } 

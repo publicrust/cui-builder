@@ -14,6 +14,7 @@ use crate::oxide_interface::{
     elements::cui_element::CuiElement,
 };
 use super::unity::UnityCanvas;
+use crate::components::toolbar::{Toolbar, Tool};
 
 #[derive(Properties, Clone, PartialEq)]
 pub struct InfiniteCanvasProps {
@@ -27,56 +28,51 @@ pub struct InfiniteCanvasProps {
 
 #[function_component(InfiniteCanvas)]
 pub fn infinite_canvas(props: &InfiniteCanvasProps) -> Html {
-    let panning = use_state(|| false);
+    let selected_tool = use_state(|| Tool::Select);
     let scale = use_state(|| 1.0);
-    let offset_x = use_state(|| 0.0);
-    let offset_y = use_state(|| 0.0);
-    let last_mouse_x = use_state(|| 0.0);
-    let last_mouse_y = use_state(|| 0.0);
+    let is_panning = use_state(|| false);
+    let last_mouse_pos = use_state(|| None::<(i32, i32)>);
+    let offset = use_state(|| (0.0, 0.0));
 
     let onmousedown = {
-        let panning = panning.clone();
-        let last_mouse_x = last_mouse_x.clone();
-        let last_mouse_y = last_mouse_y.clone();
+        let is_panning = is_panning.clone();
+        let last_mouse_pos = last_mouse_pos.clone();
         Callback::from(move |e: MouseEvent| {
             if e.buttons() == 2 { // Правая кнопка мыши
                 e.prevent_default();
-                panning.set(true);
-                last_mouse_x.set(e.client_x() as f64);
-                last_mouse_y.set(e.client_y() as f64);
+                is_panning.set(true);
+                last_mouse_pos.set(Some((e.client_x() as i32, e.client_y() as i32)));
             }
         })
     };
 
     let onmouseup = {
-        let panning = panning.clone();
+        let is_panning = is_panning.clone();
         Callback::from(move |_: MouseEvent| {
-            panning.set(false);
+            is_panning.set(false);
         })
     };
 
     let onmousemove = {
-        let panning = panning.clone();
-        let offset_x = offset_x.clone();
-        let offset_y = offset_y.clone();
-        let last_mouse_x = last_mouse_x.clone();
-        let last_mouse_y = last_mouse_y.clone();
+        let is_panning = is_panning.clone();
+        let offset = offset.clone();
+        let last_mouse_pos = last_mouse_pos.clone();
         Callback::from(move |e: MouseEvent| {
-            if *panning {
-                let dx = e.client_x() as f64 - *last_mouse_x;
-                let dy = e.client_y() as f64 - *last_mouse_y;
-                offset_x.set(*offset_x + dx);
-                offset_y.set(*offset_y + dy);
-                last_mouse_x.set(e.client_x() as f64);
-                last_mouse_y.set(e.client_y() as f64);
+            if *is_panning {
+                if let Some((last_x, last_y)) = *last_mouse_pos {
+                    let dx = e.client_x() as f64 - last_x as f64;
+                    let dy = e.client_y() as f64 - last_y as f64;
+                    offset.set((offset.0 + dx, offset.1 + dy));
+                    last_mouse_pos.set(Some((e.client_x() as i32, e.client_y() as i32)));
+                }
             }
         })
     };
 
     let onmouseleave = {
-        let panning = panning.clone();
+        let is_panning = is_panning.clone();
         Callback::from(move |_: MouseEvent| {
-            panning.set(false);
+            is_panning.set(false);
         })
     };
 
@@ -99,88 +95,111 @@ pub fn infinite_canvas(props: &InfiniteCanvasProps) -> Html {
             e.prevent_default();
             if let Some(dt) = e.data_transfer() {
                 if let Ok(template) = dt.get_data("text/plain") {
+                    web_sys::console::log_1(&format!("Dropped template: {}", template).into());
                     let element = match template.as_str() {
-                        "UnityCanvas" => Element {
-                            id: Uuid::new_v4().to_string(),
-                            name: "Unity Canvas".to_string(),
-                            parent: None,
-                            element_type: ElementType::Panel,
-                            components: vec![
-                                Component::RectTransform(CuiRectTransformComponent {
-                                    base: CuiRectTransform {
-                                        anchormin: "0 0".to_string(),
-                                        anchormax: "1 1".to_string(),
-                                        offsetmin: "10 10".to_string(),
-                                        offsetmax: "-10 -10".to_string(),
-                                    }
-                                }),
-                            ],
-                            fade_out: 0.0,
-                            destroy_ui: None,
+                        "Tool::UnityCanvas" => {
+                            web_sys::console::log_1(&"Creating UnityCanvas".into());
+                            Element {
+                                id: Uuid::new_v4().to_string(),
+                                name: "Unity Canvas".to_string(),
+                                parent: Some("Hud".to_string()),
+                                element_type: ElementType::Panel,
+                                components: vec![
+                                    Component::RectTransform(CuiRectTransformComponent {
+                                        base: CuiRectTransform {
+                                            anchormin: "0 0".to_string(),
+                                            anchormax: "1 1".to_string(),
+                                            offsetmin: "10 10".to_string(),
+                                            offsetmax: "-10 -10".to_string(),
+                                        }
+                                    }),
+                                ],
+                                fade_out: 0.0,
+                                destroy_ui: None,
+                            }
                         },
-                        "Panel" => Element {
-                            id: Uuid::new_v4().to_string(),
-                            name: "Panel".to_string(),
-                            parent: None,
-                            element_type: ElementType::Panel,
-                            components: vec![
-                                Component::RectTransform(CuiRectTransformComponent::default()),
-                                Component::Image(CuiImageComponent::default()),
-                            ],
-                            fade_out: 0.0,
-                            destroy_ui: None,
+                        "Tool::Panel" => {
+                            web_sys::console::log_1(&"Creating Panel".into());
+                            Element {
+                                id: Uuid::new_v4().to_string(),
+                                name: "Panel".to_string(),
+                                parent: Some("Hud".to_string()),
+                                element_type: ElementType::Panel,
+                                components: vec![
+                                    Component::RectTransform(CuiRectTransformComponent::default()),
+                                    Component::Image(CuiImageComponent::default()),
+                                ],
+                                fade_out: 0.0,
+                                destroy_ui: None,
+                            }
                         },
-                        "Button" => Element {
-                            id: Uuid::new_v4().to_string(),
-                            name: "Button".to_string(),
-                            parent: None,
-                            element_type: ElementType::Button,
-                            components: vec![
-                                Component::RectTransform(CuiRectTransformComponent::default()),
-                                Component::Button(CuiButtonComponent::default()),
-                                Component::Text(CuiTextComponent::default()),
-                            ],
-                            fade_out: 0.0,
-                            destroy_ui: None,
+                        "Tool::Button" => {
+                            web_sys::console::log_1(&"Creating Button".into());
+                            Element {
+                                id: Uuid::new_v4().to_string(),
+                                name: "Button".to_string(),
+                                parent: Some("Hud".to_string()),
+                                element_type: ElementType::Button,
+                                components: vec![
+                                    Component::RectTransform(CuiRectTransformComponent::default()),
+                                    Component::Button(CuiButtonComponent::default()),
+                                    Component::Text(CuiTextComponent::default()),
+                                ],
+                                fade_out: 0.0,
+                                destroy_ui: None,
+                            }
                         },
-                        "Label" => Element {
-                            id: Uuid::new_v4().to_string(),
-                            name: "Label".to_string(),
-                            parent: None,
-                            element_type: ElementType::Text,
-                            components: vec![
-                                Component::RectTransform(CuiRectTransformComponent::default()),
-                                Component::Text(CuiTextComponent::default()),
-                            ],
-                            fade_out: 0.0,
-                            destroy_ui: None,
+                        "Tool::Label" => {
+                            web_sys::console::log_1(&"Creating Label".into());
+                            Element {
+                                id: Uuid::new_v4().to_string(),
+                                name: "Label".to_string(),
+                                parent: Some("Hud".to_string()),
+                                element_type: ElementType::Text,
+                                components: vec![
+                                    Component::RectTransform(CuiRectTransformComponent::default()),
+                                    Component::Text(CuiTextComponent::default()),
+                                ],
+                                fade_out: 0.0,
+                                destroy_ui: None,
+                            }
                         },
-                        "Image" => Element {
-                            id: Uuid::new_v4().to_string(),
-                            name: "Image".to_string(),
-                            parent: None,
-                            element_type: ElementType::Panel,
-                            components: vec![
-                                Component::RectTransform(CuiRectTransformComponent::default()),
-                                Component::Image(CuiImageComponent::default()),
-                            ],
-                            fade_out: 0.0,
-                            destroy_ui: None,
+                        "Tool::Image" => {
+                            web_sys::console::log_1(&"Creating Image".into());
+                            Element {
+                                id: Uuid::new_v4().to_string(),
+                                name: "Image".to_string(),
+                                parent: Some("Hud".to_string()),
+                                element_type: ElementType::Panel,
+                                components: vec![
+                                    Component::RectTransform(CuiRectTransformComponent::default()),
+                                    Component::Image(CuiImageComponent::default()),
+                                ],
+                                fade_out: 0.0,
+                                destroy_ui: None,
+                            }
                         },
-                        "RawImage" => Element {
-                            id: Uuid::new_v4().to_string(),
-                            name: "RawImage".to_string(),
-                            parent: None,
-                            element_type: ElementType::Panel,
-                            components: vec![
-                                Component::RectTransform(CuiRectTransformComponent::default()),
-                                Component::RawImage(CuiRawImageComponent::default()),
-                            ],
-                            fade_out: 0.0,
-                            destroy_ui: None,
+                        "Tool::RawImage" => {
+                            web_sys::console::log_1(&"Creating RawImage".into());
+                            Element {
+                                id: Uuid::new_v4().to_string(),
+                                name: "RawImage".to_string(),
+                                parent: Some("Hud".to_string()),
+                                element_type: ElementType::Panel,
+                                components: vec![
+                                    Component::RectTransform(CuiRectTransformComponent::default()),
+                                    Component::RawImage(CuiRawImageComponent::default()),
+                                ],
+                                fade_out: 0.0,
+                                destroy_ui: None,
+                            }
                         },
-                        _ => return,
+                        _ => {
+                            web_sys::console::log_1(&format!("Unknown template: {}", template).into());
+                            return;
+                        }
                     };
+                    web_sys::console::log_1(&"Emitting element".into());
                     on_add_element.emit(element);
                 }
             }
@@ -189,7 +208,7 @@ pub fn infinite_canvas(props: &InfiniteCanvasProps) -> Html {
 
     let transform_style = format!(
         "transform: translate({}px, {}px) scale({});",
-        *offset_x, *offset_y, *scale
+        offset.0, offset.1, *scale
     );
 
     // Группируем элементы по их родителям
@@ -205,8 +224,36 @@ pub fn infinite_canvas(props: &InfiniteCanvasProps) -> Html {
 
     let canvas_class = classes!(
         "infinite-canvas",
-        (*panning).then_some("panning")
+        (*is_panning).then_some("panning")
     );
+
+    let on_zoom_in = {
+        let scale = scale.clone();
+        Callback::from(move |_| {
+            scale.set((*scale * 1.2).min(5.0));
+        })
+    };
+
+    let on_zoom_out = {
+        let scale = scale.clone();
+        Callback::from(move |_| {
+            scale.set((*scale / 1.2).max(0.1));
+        })
+    };
+
+    let on_zoom_reset = {
+        let scale = scale.clone();
+        Callback::from(move |_| {
+            scale.set(1.0);
+        })
+    };
+
+    let on_tool_change = {
+        let selected_tool = selected_tool.clone();
+        Callback::from(move |tool: Tool| {
+            selected_tool.set(tool);
+        })
+    };
 
     html! {
         <div 
@@ -220,47 +267,15 @@ pub fn infinite_canvas(props: &InfiniteCanvasProps) -> Html {
             {ondragover}
             {ondrop}
         >
-            <div class="canvas-controls">
-                <button class="zoom-in" onclick={
-                    let scale = scale.clone();
-                    Callback::from(move |_| {
-                        let new_scale = (*scale * 1.2f64).min(5.0f64);
-                        scale.set(new_scale);
-                    })
-                }>
-                    {"+"}
-                </button>
-                <div class="zoom-level">
-                    {format!("{}%", (*scale * 100.0f64).round())}
-                </div>
-                <button class="zoom-out" onclick={
-                    let scale = scale.clone();
-                    Callback::from(move |_| {
-                        let new_scale = (*scale * 0.8f64).max(0.1f64);
-                        scale.set(new_scale);
-                    })
-                }>
-                    {"-"}
-                </button>
-                <button class="reset" onclick={
-                    let scale = scale.clone();
-                    Callback::from(move |_| scale.set(1.0f64))
-                }>
-                    {"Reset Zoom"}
-                </button>
-                <button class="reset" onclick={
-                    let scale = scale.clone();
-                    let offset_x = offset_x.clone();
-                    let offset_y = offset_y.clone();
-                    Callback::from(move |_| {
-                        scale.set(1.0f64);
-                        offset_x.set(0.0f64);
-                        offset_y.set(0.0f64);
-                    })
-                }>
-                    {"Reset View"}
-                </button>
-            </div>
+            <Toolbar
+                scale={*scale}
+                on_zoom_in={on_zoom_in}
+                on_zoom_out={on_zoom_out}
+                on_zoom_reset={on_zoom_reset}
+                on_add_element={props.on_add_element.clone()}
+                on_tool_change={on_tool_change}
+                selected_tool={(*selected_tool).clone()}
+            />
             <div class="canvas-content" style={transform_style}>
                 {for canvases.iter().map(|canvas| {
                     let canvas_children = children.iter()
