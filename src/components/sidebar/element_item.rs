@@ -1,5 +1,5 @@
 use yew::prelude::*;
-use web_sys::DragEvent;
+use web_sys::{DragEvent, MouseEvent};
 use crate::models::element::Element;
 use crate::oxide_interface::CuiElementContainer;
 use crate::oxide_interface::elements::cui_element::CuiElement;
@@ -15,16 +15,19 @@ pub struct ElementItemProps {
 
 #[function_component(ElementItem)]
 pub fn element_item(props: &ElementItemProps) -> Html {
-    let element_class = if Some(props.element.id.clone()) == props.selected_id {
-        "element-header selected"
-    } else {
-        "element-header"
-    };
+    let drag_over = use_state(|| false);
+
+    let element_header_class = classes!(
+        "element-header",
+        (props.selected_id.as_ref().map_or(false, |id| id == &props.element.id)).then_some("selected"),
+        (*drag_over).then_some("drag-over"),
+    );
 
     let onclick = {
         let on_select = props.on_select.clone();
         let id = props.element.id.clone();
-        Callback::from(move |_| {
+        Callback::from(move |e: MouseEvent| {
+            e.stop_propagation();
             on_select.emit(id.clone());
         })
     };
@@ -32,23 +35,36 @@ pub fn element_item(props: &ElementItemProps) -> Html {
     let ondragstart = {
         let id = props.element.id.clone();
         Callback::from(move |e: DragEvent| {
-            if let Some(data_transfer) = e.data_transfer() {
-                let _ = data_transfer.set_data("text/plain", &id);
+            if let Some(dt) = e.data_transfer() {
+                let _ = dt.set_data("text/plain", &id);
             }
         })
     };
 
-    let ondragover = Callback::from(|e: DragEvent| {
-        e.prevent_default();
-    });
+    let ondragover = {
+        let drag_over = drag_over.clone();
+        Callback::from(move |e: DragEvent| {
+            e.prevent_default();
+            drag_over.set(true);
+        })
+    };
+
+    let ondragleave = {
+        let drag_over = drag_over.clone();
+        Callback::from(move |_: DragEvent| {
+            drag_over.set(false);
+        })
+    };
 
     let ondrop = {
         let on_reparent = props.on_reparent.clone();
         let id = props.element.id.clone();
+        let drag_over = drag_over.clone();
         Callback::from(move |e: DragEvent| {
             e.prevent_default();
-            if let Some(data_transfer) = e.data_transfer() {
-                if let Ok(child_id) = data_transfer.get_data("text/plain") {
+            drag_over.set(false);
+            if let Some(dt) = e.data_transfer() {
+                if let Ok(child_id) = dt.get_data("text/plain") {
                     if child_id != id {
                         on_reparent.emit((child_id, Some(id.clone())));
                     }
@@ -58,23 +74,36 @@ pub fn element_item(props: &ElementItemProps) -> Html {
     };
 
     // Находим дочерние элементы
-    let children: Vec<Element> = props.container.elements.iter()
-        .filter(|e: &&CuiElement| e.parent == props.element.id)
-        .map(|e| Element::from(e.clone()))
-        .collect();
+    let children = {
+        let elements = &props.container.elements;
+        let parent_id: &String = &props.element.id;
+        
+        elements
+            .iter()
+            .filter(|e: &&CuiElement| {
+                let parent_opt = &e.parent;
+                parent_opt
+                    .as_ref()
+                    .map_or(false, |p: &String| p == parent_id)
+            })
+            .cloned()
+            .map(Element::from)
+            .collect::<Vec<Element>>()
+    };
 
     html! {
         <div class="element-item">
             <div
-                class={element_class}
+                class={element_header_class}
                 onclick={onclick}
                 draggable="true"
                 ondragstart={ondragstart}
                 ondragover={ondragover}
+                ondragleave={ondragleave}
                 ondrop={ondrop}
             >
+                <span class="element-type">{format!("{:?}", &props.element.element_type)}</span>
                 <span class="element-name">{&props.element.id}</span>
-                <span class="element-type">{"("}{format!("{:?}", &props.element.element_type)}{")"}</span>
             </div>
             if !children.is_empty() {
                 <div class="element-children">
