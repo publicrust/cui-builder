@@ -22,18 +22,34 @@ pub fn app() -> Html {
 
     let on_reparent = {
         let elements = elements.clone();
-        Callback::from(move |(child_id, new_parent_id): (String, String)| {
+        Callback::from(move |(child_id, new_parent_id): (String, Option<String>)| {
             let mut new_elements = (*elements).clone();
             
             // Находим элемент
             if let Some(element_idx) = new_elements.iter().position(|e| e.id == child_id) {
-                // Обновляем parent
-                let mut element = new_elements[element_idx].clone();
-                element.parent = Some(new_parent_id);
-                new_elements[element_idx] = element;
+                // Проверяем, что новый родитель не является потомком перемещаемого элемента
+                let mut is_valid = true;
+                if let Some(parent_id) = &new_parent_id {
+                    let mut current_id = Some(parent_id.clone());
+                    while let Some(id) = current_id {
+                        if id == child_id {
+                            is_valid = false;
+                            break;
+                        }
+                        current_id = new_elements.iter()
+                            .find(|e| e.id == id)
+                            .and_then(|e| e.parent.clone());
+                    }
+                }
+                
+                // Обновляем parent только если перемещение допустимо
+                if is_valid {
+                    let mut element = new_elements[element_idx].clone();
+                    element.parent = new_parent_id;
+                    new_elements[element_idx] = element;
+                    elements.set(new_elements);
+                }
             }
-            
-            elements.set(new_elements);
         })
     };
 

@@ -71,12 +71,31 @@
     flex-direction: column;
 }
 
-.element-item:hover {
-    background: transparent;
+.element-header {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+    gap: 8px;
 }
 
-.element-item.selected {
+.element-header:hover {
+    background: #333333;
+}
+
+.element-header.selected {
     background: #094771;
+}
+
+.element-header.drag-over {
+    background: rgba(9, 71, 113, 0.3);
+    border: 2px dashed #094771;
+}
+
+.element-children {
+    margin-left: 20px;
+    border-left: 1px solid #3c3c3c;
+    padding-left: 8px;
 }
 
 .element-type {
