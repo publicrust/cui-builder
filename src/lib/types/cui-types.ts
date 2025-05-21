@@ -31,7 +31,7 @@ export interface CuiElement {
 // ICuiComponent - интерфейс для всех компонентов
 export interface ICuiComponent {
   readonly type: string;
-  // Дополнительные поля зависят от конкретной реализации компонента
+  readonly [key: string]: unknown;
 }
 
 // CuiRectTransformComponent - обязательный компонент для управления положением и размером
