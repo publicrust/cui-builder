@@ -1,0 +1,549 @@
+#root {
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* Основные стили для приложения */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* Стили для заголовка */
+.app-header {
+  user-select: none;
+  position: relative;
+  z-index: 20;
+}
+
+/* Стили для основного контента */
+.app-content {
+  position: relative;
+  flex: 1;
+  height: calc(100vh - 48px); /* Вычитаем высоту header */
+  overflow: hidden;
+}
+
+/* Стили для контейнера канваса */
+.canvas-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Стили для панели Canvas */
+.canvas-editor-container {
+  position: absolute;
+  inset: 0;
+  background-color: #1e1e1e;
+  overflow: hidden;
+  display: block;
+}
+
+.canvas-editor {
+  background-color: #2a2a2a;
+  border: 1px solid #333;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Стили для элементов управления Canvas */
+.canvas-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: rgba(17, 24, 39, 0.8);
+  padding: 5px 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* Стили для лупы масштабирования */
+.zoom-controls {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background-color: rgba(17, 24, 39, 0.8);
+  border-radius: 4px;
+  padding: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.zoom-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-bottom: 5px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.magnifier-icon {
+  color: #3b82f6;
+}
+
+.zoom-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background-color: #3b82f6;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.zoom-button:hover {
+  background-color: #2563eb;
+  transform: scale(1.05);
+}
+
+.zoom-button:active {
+  transform: scale(0.95);
+}
+
+.zoom-reset-button {
+  background-color: #3b82f6;
+  color: white;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: none;
+}
+
+.zoom-reset-button:hover {
+  background-color: #2563eb;
+}
+
+.zoom-indicator {
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Стили для боковых панелей */
+.sidebar-left,
+.sidebar-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+  background-color: rgba(17, 24, 39, 0.85);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  padding: 16px;
+  width: 300px;
+  overflow-y: auto;
+}
+
+.sidebar-left {
+  left: 0;
+  transform: translateX(0);
+  border-right: 1px solid rgba(75, 85, 99, 0.4);
+}
+
+.sidebar-right {
+  right: 0;
+  transform: translateX(0);
+  border-left: 1px solid rgba(75, 85, 99, 0.4);
+}
+
+.sidebar-left.hidden {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.sidebar-right.hidden {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+/* Заголовки панелей */
+.sidebar-header {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: white;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Стили для иерархии в сайдбаре */
+.hierarchy-panel {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.hierarchy-tree {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.hierarchy-item {
+  position: relative;
+  margin-bottom: 2px;
+  width: 100%;
+}
+
+.hierarchy-item-row {
+  padding: 4px 8px;
+  border-radius: 4px;
+  user-select: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.15s ease;
+  width: 100%;
+}
+
+.hierarchy-item-row:hover {
+  background-color: rgba(75, 85, 99, 0.4);
+}
+
+.hierarchy-item-row.selected {
+  background-color: rgba(59, 130, 246, 0.5);
+}
+
+.hierarchy-item-row.dragging {
+  opacity: 0.5;
+}
+
+/* Стили для визуализации перетаскивания */
+.hierarchy-item-row.drop-target {
+  background-color: rgba(59, 130, 246, 0.3); /* Синий фон для контейнеров */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  position: relative;
+}
+
+.hierarchy-item-row.drop-target-child {
+  background-color: rgba(34, 197, 94, 0.3); /* Зеленый фон для дочерних элементов */
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.5);
+  position: relative;
+}
+
+.hierarchy-item-row.drop-target::after,
+.hierarchy-item-row.drop-target-child::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  animation: pulse 1.5s infinite;
+}
+
+.hierarchy-item-row.drop-target::after {
+  background-color: #3b82f6;
+}
+
+.hierarchy-item-row.drop-target-child::after {
+  background-color: #10b981;
+}
+
+.hierarchy-item-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 24px;
+}
+
+.expander {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: 2px;
+  flex-shrink: 0;
+  opacity: 0.8;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+}
+
+.expander:hover {
+  background-color: rgba(107, 114, 128, 0.2);
+}
+
+.type-icon {
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.container-icon {
+  color: #FBBF24; /* Желтый цвет для контейнеров */
+}
+
+.element-icon {
+  color: #60A5FA; /* Синий цвет для обычных элементов */
+}
+
+.element-icon.text-green-400 {
+  color: #10b981; /* Зеленый цвет для элементов с детьми */
+}
+
+.item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+}
+
+/* Стили для выделенных элементов */
+.hierarchy-item-row.selected .item-name,
+.hierarchy-item-row.selected .children-count,
+.hierarchy-item-row.selected .element-icon,
+.hierarchy-item-row.selected .container-icon,
+.hierarchy-item-row.selected .expander {
+  color: white !important;
+}
+
+.hierarchy-item-children {
+  margin-top: 2px;
+  padding-left: 24px;
+  border-left: 1px solid rgba(107, 114, 128, 0.4);
+  margin-left: 9px;
+  margin-bottom: 2px;
+}
+
+/* Показываем пунктирную линию соединения для улучшения визуализации */
+.hierarchy-item-children .hierarchy-item:last-child > .hierarchy-item-children {
+  border-left: 1px dashed rgba(107, 114, 128, 0.4);
+}
+
+.item-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.hierarchy-item-row:hover .item-actions {
+  opacity: 1;
+}
+
+.add-btn, .remove-btn {
+  background: none;
+  border: none;
+  padding: 2px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.2s;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.add-btn:hover {
+  color: #34D399 !important;
+}
+
+.remove-btn:hover {
+  color: #F87171 !important;
+}
+
+/* Стили для элементов с детьми */
+.hierarchy-item-row.has-children .item-name {
+  font-weight: 600;
+}
+
+.element-icon.text-green-400 {
+  stroke-width: 2.5;
+}
+
+.children-count {
+  opacity: 0.7;
+  font-size: 0.75rem;
+  color: #60A5FA;
+  margin-left: 4px;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* Стили для инспектора свойств */
+.inspector-panel {
+  font-size: 0.9rem;
+}
+
+.inspector-panel h3 {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.inspector-panel input,
+.inspector-panel select,
+.inspector-panel textarea {
+  width: 100%;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.inspector-panel input:focus,
+.inspector-panel select:focus,
+.inspector-panel textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+/* Стили для кнопок */
+button {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+/* Стили для выпадающего меню */
+.dropdown-menu {
+  max-height: calc(100vh - 60px);
+  overflow-y: auto;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(75, 85, 99, 0.4);
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .dropdown-menu {
+    max-width: calc(100vw - 32px);
+    width: calc(100vw - 32px) !important;
+    right: 16px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .canvas-controls,
+  .zoom-controls {
+    right: 10px !important;
+  }
+  
+  .sidebar-right.hidden ~ .canvas-container .canvas-controls,
+  .sidebar-right.hidden ~ .canvas-container .zoom-controls {
+    right: 10px !important;
+  }
+}
+
+/* Более заметная индикация, когда элемент может содержать дочерние элементы */
+.hierarchy-item-row[data-has-children="true"] .expander {
+  color: #10b981;
+}
+
+/* Дополнительные стили для элементов с дочерними элементами */
+@keyframes childElementPulse {
+  0% {
+    stroke-opacity: 0.3;
+  }
+  50% {
+    stroke-opacity: 0.8;
+  }
+  100% {
+    stroke-opacity: 0.3;
+  }
+}
+
+.element-with-children {
+  stroke: #10b981;
+  stroke-width: 1.5px;
+  animation: childElementPulse 2s infinite;
+}
+
+/* Стиль для метки дочерних элементов */
+.child-element-count {
+  background-color: rgba(16, 185, 129, 0.7);
+  padding: 1px 4px;
+  border-radius: 9px;
+  font-size: 10px;
+  color: white;
+  margin-left: 4px;
+}
